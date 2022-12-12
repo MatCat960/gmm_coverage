@@ -43,8 +43,8 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 #include <GaussianMixtureModel/GaussianMixtureModel.h>
 #include <GaussianMixtureModel/ExpectationMaximization.h>
 #include <GaussianMixtureModel/TrainSet.h>
@@ -78,7 +78,7 @@ public:
         this->get_parameter("CLUSTERS_NUM", CLUSTERS_NUM);
         
         // --------------------------------------------------------- GMM ROS publisher -------------------------------------------------------
-        publisher = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1);
+        publisher = this->create_publisher<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1);
         timer_ = this->create_wall_timer(100ms, std::bind(&Interface::timer_callback, this));
 
         //----------------------------------------------------------- init Variables ---------------------------------------------------------
@@ -104,7 +104,7 @@ public:
         // Create GMM ROS msg
         for (int i=0; i<gmm_.getClusters().size(); i++)
         {
-            turtlebot3_msgs::msg::Gaussian gaussian_msg;
+            gmm_msgs::msg::Gaussian gaussian_msg;
             geometry_msgs::msg::Point mean_pt;
 
             mean_pt.x = gmm_.getClusters()[i].distribution->getMean()[0];
@@ -145,8 +145,8 @@ private:
 
     //------------------------- Publishers and subscribers ------------------------------
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr publisher;
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    rclcpp::Publisher<gmm_msgs::msg::GMM>::SharedPtr publisher;
+    gmm_msgs::msg::GMM gmm_msg;
     //-----------------------------------------------------------------------------------
 
     // SFML GUI

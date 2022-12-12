@@ -47,8 +47,8 @@
 #include <geometry_msgs/msg/polygon.hpp>
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -136,7 +136,7 @@ public:
     }
     
     joySub_ = this->create_subscription<geometry_msgs::msg::Twist>("/joy_vel", 1, std::bind(&Controller::joy_callback, this, _1));
-    gmmSub_ = this->create_subscription<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, _1));
+    gmmSub_ = this->create_subscription<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, _1));
     voronoiPub = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/voronoi"+std::to_string(ID)+"_diagram", 1);
     timer_ = this->create_wall_timer(200ms, std::bind(&Controller::Formation, this));
     //rclcpp::on_shutdown(std::bind(&Controller::stop,this));
@@ -160,7 +160,7 @@ public:
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int j);
     void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg, int j);
     void joy_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
-    void gmm_callback(const turtlebot3_msgs::msg::GMM::SharedPtr msg);
+    void gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg);
     void Formation();
     geometry_msgs::msg::Twist Diff_drive_compute_vel(double vel_x, double vel_y, double alfa);
 
@@ -194,10 +194,10 @@ private:
     std::vector<rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr> poseSub_;
     std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> odomSub_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr joySub_;
-    rclcpp::Subscription<turtlebot3_msgs::msg::GMM>::SharedPtr gmmSub_;
+    rclcpp::Subscription<gmm_msgs::msg::GMM>::SharedPtr gmmSub_;
     rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr voronoiPub;
     rclcpp::TimerBase::SharedPtr timer_;
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    gmm_msgs::msg::GMM gmm_msg;
     geometry_msgs::msg::Polygon polygon_msg;
     geometry_msgs::msg::PolygonStamped polygonStamped_msg;
     
@@ -307,7 +307,7 @@ void Controller::joy_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
     this->vel_angular_z = msg->angular.z;
 }
 
-void Controller::gmm_callback(const turtlebot3_msgs::msg::GMM::SharedPtr msg)
+void Controller::gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg)
 {
     this->gmm_msg.gaussians = msg->gaussians;
     this->gmm_msg.weights = msg->weights;

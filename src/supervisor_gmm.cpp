@@ -43,8 +43,8 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -63,27 +63,20 @@ public:
         // MODE: 0 = Default, 1 = FROM FILE
         this->declare_parameter<int>("MODE", 0);
         this->get_parameter("MODE", MODE);
-                    int column = 1;
+        int column = 1;
 
-        this->declare_parameter<std::string>("FILE_PATH", "src/turtlebot3_msgs/src/coverage_distributed/gmm_matrix.txt");
+        // FILE PATH TO .txt FILE WHERE GMM PARAMS ARE STORED
+        this->declare_parameter<std::string>("FILE_PATH", "src/gmm_coverage/src/gmm_matrix.txt");
         this->get_parameter("FILE_PATH", FILE_PATH);
 
         // --------------------------------------------------------- GMM ROS publisher -------------------------------------------------------
-        publisher = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1);
+        publisher = this->create_publisher<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1);
         timer_ = this->create_wall_timer(100ms, std::bind(&Supervisor::timer_callback, this));
 
         //----------------------------------------------------------- init Variables ---------------------------------------------------------
         if (MODE == 0)
         {
-            // VARs = {{{1.86,-0.02},{-0.02,19.26}},{{8.02,-0.27},{-0.27,2.03}},{{1.87,0.38},{0.38,1.9}},{{2.22,0.19},{0.19,5.58}}};
-            // MEANs = {{-3.8337,0},{5.5234,-3.0563},{-2.8070,3.0},{-2.8554,-2.9132}};
-            // weights = {0.4183,0.2817,0.1105,0.1895};
-            // MEANs = {{-0.3,0.0}};
-            // VARs = {{{0.2, 0.0},{0.0,0.5}}};
-            // weights = {1};
-            // VARs = {{{1.86,-0.02},{-0.02,19.26}},{{8.02,-0.27},{-0.27,2.03}}};
-            // MEANs = {{-0.8337,0},{2.5234,-3.0563}};
-            // weights = {0.41,0.59};
+            
 
             // ------ test gmm ------
             VARs = {{{0.098,0.002},{0.002,0.0167}},{{0.014,-0.002},{-0.002,0.008}},{{0.017,-0.003},{-0.003,0.03}},{{0.02,-0.007},{-0.007,0.11}}};
@@ -154,10 +147,10 @@ public:
 
         
         // ------------------------------------------ Creazione messaggi custom Gaussiane --------------------------------------------
-        // turtlebot3_msgs::msg::GMM gmm_msg;
+        // gmm_msgs::msg::GMM gmm_msg;
         for (int i=0; i<MEANs.size(); i++)
         {
-            turtlebot3_msgs::msg::Gaussian gaussian_msg;
+            gmm_msgs::msg::Gaussian gaussian_msg;
             geometry_msgs::msg::Point mean_pt;
 
             mean_pt.x = MEANs[i][0];
@@ -190,8 +183,8 @@ private:
 
     //------------------------- Publishers and subscribers ------------------------------
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr publisher;
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    rclcpp::Publisher<gmm_msgs::msg::GMM>::SharedPtr publisher;
+    gmm_msgs::msg::GMM gmm_msg;
     //-----------------------------------------------------------------------------------
 
 
