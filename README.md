@@ -32,7 +32,7 @@ This repository contains C++ and Python code to define and handle Gaussian Mixtu
 
 ### Python implementation ###
 * Install ***roipoly*** library for the definition of a region of interest (see https://github.com/jdoepfert/roipoly.py):   
-	`git clone https://github.com/jdoepfert/roipoly.py`
+	`pip install roipoly`
 * Install ***scikit-learn*** library for  (for further information: https://scikit-learn.org/stable/index.html):   
 	`pip install -U scikit-learn`
 	
