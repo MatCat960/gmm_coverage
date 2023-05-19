@@ -21,7 +21,7 @@ This repository contains C++ and Python code to define and handle Gaussian Mixtu
 ### General ###
 * Install custom ROS msgs for the definition of Gaussian Mixture Models:
 
-    `git clone git@bitbucket.org:mcatellani96/gmm_msgs.git`
+    `git clone https://github.com/MatCat960/gmm_msgs.git`
 
 
 ### C++ implementation ###
