@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <math.h>
+#include <signal.h>
 // SFML
 // #include <SFML/Graphics.hpp>
 // #include <SFML/OpenGL.hpp>
@@ -31,21 +32,20 @@
 #include "gmm_coverage/FortuneAlgorithm.h"
 #include "gmm_coverage/Voronoi.h"
 #include "gmm_coverage/Graphics.h"
+#include "gmm_coverage/Diagram.h"
 // #include "Graphics.h"
 // ROS includes
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "geometry_msgs/msg/twist.hpp"
-#include "geometry_msgs/msg/point.hpp"
-#include "sensor_msgs/msg/channel_float32.hpp"
-#include "std_msgs/msg/int16.hpp"
-#include "std_msgs/msg/bool.hpp"
-#include <geometry_msgs/msg/pose.hpp>
-#include <geometry_msgs/msg/twist.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include "gmm_msgs/msg/gaussian.hpp"
-#include "gmm_msgs/msg/gmm.hpp"
+#include "ros/ros.h"
+
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Point.h>
+#include <nav_msgs/Odometry.h>
+#include <gmm_msgs/Gaussian.h>
+#include <gmm_msgs/GMM.h>
+
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -62,6 +62,8 @@ const float CONVERGENCE_TOLERANCE = 0.1;
 //------------------------------------------------------------------------
 const int shutdown_timer = 15;           //count how many seconds to let the robots stopped before shutting down the node
 
+sig_atomic_t volatile node_shutdown_request = 0;    //signal manually generated when ctrl+c is pressed
+
 // std::vector<std::vector<double>> corners;
 
 // Corners
@@ -73,45 +75,32 @@ bool IsPathExist(const std::string &s)
   return (stat (s.c_str(), &buffer) == 0);
 }
 
-class Controller : public rclcpp::Node
+class Controller
 {
 
 public:
-    Controller() : Node("gmm_distribution")
+    Controller() : nh_priv_("~")
     {
         //------------------------------------------------- ROS parameters ---------------------------------------------------------
-        this->declare_parameter<int>("ROBOTS_NUM", 12);
-        this->get_parameter("ROBOTS_NUM", ROBOTS_NUM);
-        this->declare_parameter<bool>("SIM",true);
-        this->get_parameter("SIM", SIM);
+        // Sim parameters
+        this->nh_priv_.getParam("ROBOTS_NUM", ROBOTS_NUM);
+        this->nh_priv_.getParam("SIM", SIM);
+        this->nh_priv_.getParam("ROBOT_RANGE", ROBOT_RANGE);
 
-        //Range di percezione singolo robot (= metà lato box locale)
-        this->declare_parameter<double>("ROBOT_RANGE", 4);
-        this->get_parameter("ROBOT_RANGE", ROBOT_RANGE);
+        // Gaussian parameters
+        this->nh_priv_.getParam("GAUSSIAN_DISTRIBUTION", GAUSSIAN_DISTRIBUTION);
+        this->nh_priv_.getParam("PT_X", PT_X);
+        this->nh_priv_.getParam("PT_Y", PT_Y);
+        this->nh_priv_.getParam("VAR", VAR);
         
-        // Parameters for Gaussian
-        this->declare_parameter<bool>("GAUSSIAN_DISTRIBUTION", 1);
-        this->get_parameter("GAUSSIAN_DISTRIBUTION", GAUSSIAN_DISTRIBUTION);
-        this->declare_parameter<double>("PT_X", -100);
-        this->get_parameter("PT_X", PT_X);
-        this->declare_parameter<double>("PT_Y", 100);
-        this->get_parameter("PT_Y", PT_Y);
-        this->declare_parameter<double>("VAR", 2);
-        this->get_parameter("VAR", VAR);
+        // View graphical voronoi rapresentation - bool
+        this->nh_priv_.getParam("GRAPHICS_ON", GRAPHICS_ON);
 
-        //view graphical voronoi rapresentation - bool
-        this->declare_parameter<bool>("GRAPHICS_ON", true);
-        this->get_parameter("GRAPHICS_ON", GRAPHICS_ON);
-
-        // Area parameter
-        this->declare_parameter<double>("AREA_SIZE_x", 40);
-        this->get_parameter("AREA_SIZE_x", AREA_SIZE_x);
-        this->declare_parameter<double>("AREA_SIZE_y", 20);
-        this->get_parameter("AREA_SIZE_y", AREA_SIZE_y);
-        this->declare_parameter<double>("AREA_LEFT", -20);
-        this->get_parameter("AREA_LEFT", AREA_LEFT);
-        this->declare_parameter<double>("AREA_BOTTOM", -10);
-        this->get_parameter("AREA_BOTTOM", AREA_BOTTOM);
+        // Area parameters
+        this->nh_priv_.getParam("AREA_SIZE_x", AREA_SIZE_x);
+        this->nh_priv_.getParam("AREA_SIZE_y", AREA_SIZE_y);
+        this->nh_priv_.getParam("AREA_LEFT", AREA_LEFT);
+        this->nh_priv_.getParam("AREA_BOTTOM", AREA_BOTTOM);
         //-----------------------------------------------------------------------------------------------------------------------------------
 
         //--------------------------------------------------- Subscribers and Publishers ----------------------------------------------------
@@ -119,20 +108,22 @@ public:
         {
             for (int i = 0; i < ROBOTS_NUM; i++)
             {
-                odomSub_.push_back(this->create_subscription<nav_msgs::msg::Odometry>("/turtlebot" + std::to_string(i) + "/odom", 100, [this, i](nav_msgs::msg::Odometry::SharedPtr msg) {this->odomCallback(msg,i);}));
-                velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtlebot" + std::to_string(i) + "/cmd_vel", 1));
+                // odomSub_.push_back(nh_.subscribe<nav_msgs::Odometry>("/turtlebot" + std::to_string(i) + "/odom", 100, [this, i](nav_msgs::Odometry::SharedPtr msg) {this->odomCallback(msg,i);}));
+                odomSub_.push_back(nh_.subscribe<nav_msgs::Odometry>("/turtlebot" + std::to_string(i) + "/odom", 100, std::bind(&Controller::odomCallback, this, std::placeholders::_1, i)));
+                velPub_.push_back(nh_.advertise<geometry_msgs::Twist>("/turtlebot" + std::to_string(i) + "/cmd_vel", 1));
             }
         } else
         {
             for (int i = 0; i < ROBOTS_NUM; i++)
             {
-                velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtle" + std::to_string(i) + "/cmd_vel", 1));
-                poseSub_.push_back(this->create_subscription<geometry_msgs::msg::PoseStamped>("/vrpn_client_node/turtle" + std::to_string(i) + "/pose", 100, [this, i](geometry_msgs::msg::PoseStamped::SharedPtr msg) {this->poseCallback(msg,i);}));        
+                velPub_.push_back(nh_.advertise<geometry_msgs::Twist>("/turtle" + std::to_string(i) + "/cmd_vel", 1));
+                poseSub_.push_back(nh_.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/turtle" + std::to_string(i) + "/pose", 100, std::bind(&Controller::poseCallback, this, std::placeholders::_1, i)));        
+                // poseSub_.push_back(nh_.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/turtle" + std::to_string(i) + "/pose", 100, [this, i](geometry_msgs::PoseStamped::SharedPtr msg) {this->poseCallback(msg,i);}));        
             }
         }
-        joySub_ = this->create_subscription<geometry_msgs::msg::Twist>("/joy_vel", 1, std::bind(&Controller::joy_callback, this, _1));
-        gmmSub_ = this->create_subscription<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, _1));
-        timer_ = this->create_wall_timer(500ms, std::bind(&Controller::Formation, this));
+        joySub_ = nh_.subscribe<geometry_msgs::Twist>("/joy_vel", 1, std::bind(&Controller::joy_callback, this, std::placeholders::_1));
+        gmmSub_ = nh_.subscribe<gmm_msgs::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, std::placeholders::_1));
+        timer_ = nh_.createTimer(ros::Duration(0.5), std::bind(&Controller::Formation, this));
         //rclcpp::on_shutdown(std::bind(&Controller::stop,this));
 
         //----------------------------------------------------------- init Variables ---------------------------------------------------------
@@ -158,22 +149,22 @@ public:
     //void stop(int signum);
     void stop();
     void test_print();
-    void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int j);
-    void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg, int j);
-    void joy_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
-    void gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg);
+    void odomCallback(const nav_msgs::Odometry::ConstPtr msg, int j);
+    void poseCallback(const geometry_msgs::PoseStamped::ConstPtr msg, int j);
+    void joy_callback(const geometry_msgs::Twist::ConstPtr msg);
+    void gmm_callback(const gmm_msgs::GMM::ConstPtr msg);
     Eigen::VectorXd Matrix_row_sum(Eigen::MatrixXd x);
     Eigen::MatrixXd Diag_Matrix(Eigen::VectorXd V);
     void Formation();
-    geometry_msgs::msg::Twist Diff_drive_compute_vel(double vel_x, double vel_y, double alfa);
+    geometry_msgs::Twist Diff_drive_compute_vel(double vel_x, double vel_y, double alfa);
 
 
 private:
-    int ROBOTS_NUM;
-    double ROBOT_RANGE;
+    int ROBOTS_NUM = 6;
+    double ROBOT_RANGE = 10.0;
     bool NotJustStarted;           // Flag per indicare che sono al primo ciclo di esecuzione del nodo
     bool got_gmm;
-    bool SIM;
+    bool SIM = true;
 
     double vel_linear_x, vel_angular_z;
     Eigen::VectorXd pose_x;
@@ -189,14 +180,16 @@ private:
     std::vector<std::vector<Vector2<double>>> old_positions;                    // vector containing last 10 positions of each robot
 
     //------------------------- Publishers and subscribers ------------------------------
-    std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> velPub_;
-    // std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> poseSub_;
-    std::vector<rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr> poseSub_;
-    std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> odomSub_;
-    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr joySub_;
-    rclcpp::Subscription<gmm_msgs::msg::GMM>::SharedPtr gmmSub_;
-    rclcpp::TimerBase::SharedPtr timer_;
-    gmm_msgs::msg::GMM gmm_msg;
+    std::vector<ros::Publisher> velPub_;
+    // std::vector<ros::Subscriber<nav_msgs::Odometry>::ConstPtr> poseSub_;
+    std::vector<ros::Subscriber> poseSub_;
+    std::vector<ros::Subscriber> odomSub_;
+    ros::Subscriber joySub_;
+    ros::Subscriber gmmSub_;
+    ros::Timer timer_;
+    gmm_msgs::GMM gmm_msg;
+    ros::NodeHandle nh_;
+    ros::NodeHandle nh_priv_;
     //-----------------------------------------------------------------------------------
 
     //Rendering with SFML
@@ -205,10 +198,10 @@ private:
     //------------------------------------------------------------------------------------
 
     //---------------------------- Environment definition --------------------------------
-    double AREA_SIZE_x;
-    double AREA_SIZE_y;
-    double AREA_LEFT;
-    double AREA_BOTTOM;
+    double AREA_SIZE_x = 20.0;
+    double AREA_SIZE_y = 20.0;
+    double AREA_LEFT = 10.0;
+    double AREA_BOTTOM = 10.0;
     //------------------------------------------------------------------------------------
 
     //---------------------- Gaussian Density Function parameters ------------------------
@@ -220,7 +213,7 @@ private:
     //------------------------------------------------------------------------------------
 
     //graphical view - ON/OFF
-    bool GRAPHICS_ON;
+    bool GRAPHICS_ON = true;
 
     //timer - check how long robots are being stopped
     time_t timer_init_count;
@@ -243,30 +236,26 @@ void Controller::test_print()
 void Controller::stop()
 {
     //if (signum == SIGINT || signum == SIGKILL || signum ==  SIGQUIT || signum == SIGTERM)
-    RCLCPP_INFO_STREAM(this->get_logger(), "shutting down the controller, stopping the robots, closing the graphics window");
-    if ((GRAPHICS_ON) && (this->app_gui->isOpen())){
-        this->app_gui->close();
-    }
-    this->timer_->cancel();
-    rclcpp::sleep_for(100000000ns);
+    ROS_INFO("shutting down the controller, stopping the robots, closing the graphics window");
+    // if ((GRAPHICS_ON) && (this->app_gui->isOpen())){
+    //     this->app_gui->close();
+    // }
+    // this->timer_->cancel();
+    ros::Duration(0.1).sleep();
 
-    geometry_msgs::msg::Twist vel_msg;
+    geometry_msgs::TwistStamped vel_msg;
     for (int i = 0; i < 100; ++i)
     {
-        for (int r = 0; r < ROBOTS_NUM; ++r)
-        {
-            this->velPub_[r]->publish(vel_msg);
-        }
+        this->velPub_[0].publish(vel_msg);
     }
 
-    RCLCPP_INFO_STREAM(this->get_logger(), "controller has been closed and robots have been stopped");
-    rclcpp::sleep_for(100000000ns);
-    // this->close_log_file();
-    // this->close_gauss_file();
-    // this->close_k_file();
+    ROS_INFO("controller has been closed and robots have been stopped");
+    ros::Duration(0.1).sleep();
+
+    ros::shutdown();
 }
 
-void Controller::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg, int j)
+void Controller::poseCallback(const geometry_msgs::PoseStamped::ConstPtr msg, int j)
 {
     // std::cout << "ROBOT " << std::to_string(j) << " dentro a poseCallback" << std::endl;
     this->pose_x(j) = msg->pose.position.x;
@@ -286,7 +275,7 @@ void Controller::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr m
     // std::cout << "ROBOT " << std::to_string(j) << " pose_x: " << std::to_string(this->pose_x(j)) << ", pose_y: " << std::to_string(this->pose_y(j)) << ", theta: " << std::to_string(this->pose_theta(j)) << std::endl;
 }
 
-void Controller::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int j)
+void Controller::odomCallback(const nav_msgs::Odometry::ConstPtr msg, int j)
 {
     // std::cout << "ROBOT " << std::to_string(ID) << " dentro a odomCallback" << std::endl;
     this->pose_x(j) = msg->pose.pose.position.x;
@@ -304,13 +293,13 @@ void Controller::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int 
     this->pose_theta(j) = yaw;
 }
 
-void Controller::joy_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
+void Controller::joy_callback(const geometry_msgs::Twist::ConstPtr msg)
 {
     this->vel_linear_x = msg->linear.x;
     this->vel_angular_z = msg->angular.z;
 }
 
-void Controller::gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg)
+void Controller::gmm_callback(const gmm_msgs::GMM::ConstPtr msg)
 {
     // std::cout << "ROBOT " << std::to_string(ID) << " dentro a GMM callback" << std::endl;
     this->gmm_msg.gaussians = msg->gaussians;
@@ -349,12 +338,12 @@ Eigen::MatrixXd Controller::Diag_Matrix(Eigen::VectorXd V)
 }
 
 
-geometry_msgs::msg::Twist Controller::Diff_drive_compute_vel(double vel_x, double vel_y, double alfa){
+geometry_msgs::Twist Controller::Diff_drive_compute_vel(double vel_x, double vel_y, double alfa){
     //-------------------------------------------------------------------------------------------------------
     //Compute velocities commands for the robot: differential drive control, for UAVs this is not necessary
     //-------------------------------------------------------------------------------------------------------
 
-    geometry_msgs::msg::Twist vel_msg;
+    geometry_msgs::Twist vel_msg;
     //double alfa = (this->pose_theta(i));
     double v=0, w=0;
 
@@ -395,7 +384,7 @@ void Controller::Formation()
     if(!this->got_gmm) return;	
     // std::cout << "GMM weights: " << this->gmm_msg.weights[10] << std::endl;
     // std::cout << "INIZIO ESPLORAZIONE" << std::endl;
-    auto start = this->get_clock()->now().nanoseconds();
+    auto timerstart = std::chrono::high_resolution_clock::now();
     //Parameters
     //double min_dist = 0.4;         //avoid robot collision
     int K_gain = 1;                  //Lloyd law gain
@@ -483,9 +472,9 @@ void Controller::Formation()
         auto vel_msg = this->Diff_drive_compute_vel(vel_x, vel_y, this->pose_theta(i));
         //-------------------------------------------------------------------------------------------------------
 
-        RCLCPP_INFO_STREAM(get_logger(), "sending cmd_vel to " << i << ":: " << vel_msg.angular.z << ", "<<vel_msg.linear.x);
+        std::cout << "sending cmd_vel to " << i << ":: " << vel_msg.angular.z << ", "<<vel_msg.linear.x;
 
-        this->velPub_[i]->publish(vel_msg);
+        this->velPub_[i].publish(vel_msg);
         //-------------------------------------------------------------------------------------------------------
         // if (!centralized_centroids)
         // {
@@ -526,14 +515,14 @@ if (all_robots_stopped == true)
             //shutdown node
             std::cout<<"SHUTTING DOWN THE NODE"<<std::endl;
             this->stop();   //stop the controller
-            rclcpp::shutdown();
+            ros::shutdown();
         }
     } else {
         time(&this->timer_init_count);
     }
 
-auto end = this->get_clock()->now().nanoseconds();
-std::cout<<"Computation time cost: -----------------: "<<end - start<<std::endl;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout<<"Computation time cost: -----------------: "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - timerstart).count()<<" ms\n";
 
 }
 
@@ -544,22 +533,27 @@ std::cout<<"Computation time cost: -----------------: "<<end - start<<std::endl;
 std::shared_ptr<Controller> globalobj_signal_handler;     //the signal function requires only one argument {int}, so the class and its methods has to be global to be used inside the signal function.
 void nodeobj_wrapper_function(int){
     std::cout<<"signal handler function CALLED"<<std::endl;
-    globalobj_signal_handler->stop();
+    node_shutdown_request = 1;
 }
 
 int main(int argc, char **argv)
 {
     signal(SIGINT, nodeobj_wrapper_function);
 
-    rclcpp::init(argc, argv);
+    ros::init(argc, argv, "centralized_gmm_node", ros::init_options::NoSigintHandler);
     auto node = std::make_shared<Controller>();
 
-    globalobj_signal_handler = node;    //to use the ros function publisher, ecc the global pointer has to point to the same node object.
+    while(!node_shutdown_request)
+    {
+        ros::spinOnce();
+    }
+    node->stop();
 
-    rclcpp::spin(node);
-
-    rclcpp::sleep_for(100000000ns);
-    rclcpp::shutdown();
+    if (ros::ok())
+    {
+        ROS_WARN("ROS HAS NOT BEEN PROPERLY SHUTDOWN, FORCING SHUTDOWN NOW");
+        ros::shutdown();
+    }
 
     return 0;
 }

@@ -11,7 +11,7 @@
 // My includes
 #include "Voronoi.h"
 #include "Vettore.h"
-#include "gmm_msgs/msg/gmm.hpp"
+#include "gmm_msgs/GMM.h"
 
 //Color points/sites
 const uint8_t P_RED = 100;    //[0-255]
@@ -433,7 +433,7 @@ public:
         }
     }
 
-    void drawGMM(const gmm_msgs::msg::GMM& gmm){
+    void drawGMM(const gmm_msgs::GMM& gmm){
         for (std::size_t i = 0; i < gmm.gaussians.size(); ++i){
             sf::CircleShape circle(0.75*POINT_RADIUS);
             circle.setFillColor(sf::Color(255,255,102));

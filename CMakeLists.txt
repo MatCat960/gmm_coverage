@@ -16,8 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_ros
   visualization_msgs
+  gmm_msgs
   )
-find_package(gmm_msgs REQUIRED)
+# find_package(gmm_msgs REQUIRED)
 find_package(gaussian_mixture_model REQUIRED)
 find_package(SFML REQUIRED COMPONENTS graphics window system)
 # uncomment the following section in order to fill in
@@ -157,6 +158,8 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${gaussian_mixture_model_INCLUDE_DIRS}
+  ${dependencies}
+  ${SFML_INCLUDE_DIR}
 )
 
 ## Declare a C++ library
@@ -213,6 +216,7 @@ add_dependencies(centralized_gmm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 target_link_libraries(centralized_gmm
   ${catkin_LIBRARIES}
   ${gaussian_mixture_model_LIBRARIES}
+  # ${dependencies}
   ${SFML_libraries}
 )
 
@@ -236,8 +240,8 @@ target_link_libraries(centralized_gmm
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-## Mark libraries for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
+# Mark libraries for installation
+# See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
 # install(TARGETS ${PROJECT_NAME}
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
