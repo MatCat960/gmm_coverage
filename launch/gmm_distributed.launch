@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="robot_name" default="turtle"/>
+
+    <arg name="ROBOTS_NUM" default="6"/>
+    <arg name="ROBOT_RANGE" default="6"/>
+    <arg name="GUI" default="true"/>
+    <arg name="SIM" default="true"/>
+
+    <arg name="AREA_SIZE_x" default="20.0"/>
+    <arg name="AREA_SIZE_y" default="20.0"/>
+    <arg name="AREA_LEFT" default="10.0"/>
+    <arg name="AREA_BOTTOM" default="10.0"/>
+
+    <arg name="use_quad1" default="1" />
+	<arg name="use_quad2" default="1" />
+	<arg name="use_quad3" default="1" />
+	<arg name="use_quad4" default="1" />
+	<arg name="use_quad5" default="1" />
+	<arg name="use_quad6" default="1" />
+
+    <group if="$(arg use_quad1)" ns="$(arg robot_name)1">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_1">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="1"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad2)" ns="$(arg robot_name)2">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_2">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="2"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad3)" ns="$(arg robot_name)3">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_3">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="3"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad4)" ns="$(arg robot_name)4">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_4">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="4"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad5)" ns="$(arg robot_name)5">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_5">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="5"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad6)" ns="$(arg robot_name)6">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_6">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="6"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+</launch>

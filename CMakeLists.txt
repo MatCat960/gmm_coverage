@@ -220,6 +220,15 @@ target_link_libraries(centralized_gmm
   ${SFML_libraries}
 )
 
+add_executable(distributed_gmm src/distributed_gmm.cpp)
+add_dependencies(distributed_gmm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(distributed_gmm
+  ${catkin_LIBRARIES}
+  ${gaussian_mixture_model_LIBRARIES}
+  # ${dependencies}
+  ${SFML_libraries}
+)
+
 #############
 ## Install ##
 #############
