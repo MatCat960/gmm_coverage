@@ -102,7 +102,7 @@ class GMM_Vis():
 
             m = Marker()
             m.id = i
-            m.header.frame_id = "map"
+            m.header.frame_id = "world"
             m.type = m.SPHERE
             m.action = m.ADD
             m.pose.position.x = self.gmm_msg.gaussians[i].mean_point.x
