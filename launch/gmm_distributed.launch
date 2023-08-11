@@ -2,7 +2,7 @@
 <launch>
     <arg name="robot_name" default="hummingbird"/>
 
-    <arg name="ROBOTS_NUM" default="4"/>
+    <arg name="ROBOTS_NUM" default="12"/>
     <arg name="ROBOT_RANGE" default="15.0"/>
     <arg name="GUI" default="true"/>
     <arg name="SIM" default="true"/>
@@ -16,14 +16,14 @@
     <arg name="use_quad1" default="1" />
 	<arg name="use_quad2" default="1" />
 	<arg name="use_quad3" default="1" />
-	<arg name="use_quad4" default="0" />
-	<arg name="use_quad5" default="0" />
-	<arg name="use_quad6" default="0" />
-	<arg name="use_quad7" default="0" />
-    <arg name="use_quad8" default="0" />
-    <arg name="use_quad9" default="0" />
-    <arg name="use_quad10" default="0" />
-    <arg name="use_quad11" default="0" />
+	<arg name="use_quad4" default="1" />
+	<arg name="use_quad5" default="1" />
+	<arg name="use_quad6" default="1" />
+	<arg name="use_quad7" default="1" />
+    <arg name="use_quad8" default="1" />
+    <arg name="use_quad9" default="1" />
+    <arg name="use_quad10" default="1" />
+    <arg name="use_quad11" default="1" />
     <arg name="use_quad12" default="1" />
 
     <group if="$(arg use_quad1)" ns="$(arg robot_name)1">
@@ -42,6 +42,14 @@
             <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
             <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
             <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
             <remap from="/turtlebot1/cmd_vel" to="/hummingbird1/autopilot/velocity_command"/>
         </node>
     </group>
@@ -62,6 +70,14 @@
             <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
             <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
             <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
             <remap from="/turtlebot2/cmd_vel" to="/hummingbird2/autopilot/velocity_command"/>
         </node>
     </group>
@@ -82,6 +98,14 @@
             <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
             <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
             <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
             <remap from="/turtlebot3/cmd_vel" to="/hummingbird3/autopilot/velocity_command"/>
         </node>
     </group>
@@ -98,6 +122,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot4/cmd_vel" to="/hummingbird4/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -113,6 +150,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot5/cmd_vel" to="/hummingbird5/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -128,6 +178,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot6/cmd_vel" to="/hummingbird6/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -143,6 +206,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot7/cmd_vel" to="/hummingbird7/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -158,6 +234,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot8/cmd_vel" to="/hummingbird8/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -173,6 +262,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot9/cmd_vel" to="/hummingbird9/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -188,6 +290,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot10/cmd_vel" to="/hummingbird10/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -203,6 +318,19 @@
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+            <remap from="/turtlebot11/cmd_vel" to="/hummingbird11/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -222,6 +350,14 @@
             <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
             <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
             <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+            <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+            <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+            <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+            <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+            <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+            <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+            <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
             <remap from="/turtlebot0/cmd_vel" to="/hummingbird0/autopilot/velocity_command"/>
         </node>
     </group>
@@ -235,30 +371,5 @@
         <param name="frame_id" value="world"/>
     </node>
 
-    
-    
-    <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
-    <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
-    <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
-    <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
-    <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
-    <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
-    <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
-    <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
-    <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
-    <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
-
-    
-    
-    <remap from="/turtlebot2/cmd_vel" to="/hummingbird2/autopilot/velocity_command"/>
-    <remap from="/turtlebot3/cmd_vel" to="/hummingbird3/autopilot/velocity_command"/>
-    <remap from="/turtlebot4/cmd_vel" to="/hummingbird4/autopilot/velocity_command"/>
-    <remap from="/turtlebot5/cmd_vel" to="/hummingbird5/autopilot/velocity_command"/>
-    <remap from="/turtlebot6/cmd_vel" to="/hummingbird6/autopilot/velocity_command"/>
-    <remap from="/turtlebot7/cmd_vel" to="/hummingbird7/autopilot/velocity_command"/>
-    <remap from="/turtlebot8/cmd_vel" to="/hummingbird8/autopilot/velocity_command"/>
-    <remap from="/turtlebot9/cmd_vel" to="/hummingbird9/autopilot/velocity_command"/>
-    <remap from="/turtlebot10/cmd_vel" to="/hummingbird10/autopilot/velocity_command"/>
-    <remap from="/turtlebot11/cmd_vel" to="/hummingbird11/autopilot/velocity_command"/>
 
 </launch>
