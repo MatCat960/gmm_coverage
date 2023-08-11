@@ -1,35 +1,48 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="robot_name" default="turtle"/>
+    <arg name="robot_name" default="hummingbird"/>
 
-    <arg name="ROBOTS_NUM" default="6"/>
-    <arg name="ROBOT_RANGE" default="6"/>
+    <arg name="ROBOTS_NUM" default="4"/>
+    <arg name="ROBOT_RANGE" default="15.0"/>
     <arg name="GUI" default="true"/>
     <arg name="SIM" default="true"/>
 
-    <arg name="AREA_SIZE_x" default="20.0"/>
-    <arg name="AREA_SIZE_y" default="20.0"/>
-    <arg name="AREA_LEFT" default="10.0"/>
-    <arg name="AREA_BOTTOM" default="10.0"/>
+    <arg name="AREA_SIZE_x" default="60.0"/>
+    <arg name="AREA_SIZE_y" default="60.0"/>
+    <arg name="AREA_LEFT" default="-30.0"/>
+    <arg name="AREA_BOTTOM" default="-30.0"/>
+    <arg name="GRAPHICS_ON" default="false"/>
 
     <arg name="use_quad1" default="1" />
 	<arg name="use_quad2" default="1" />
 	<arg name="use_quad3" default="1" />
-	<arg name="use_quad4" default="1" />
-	<arg name="use_quad5" default="1" />
-	<arg name="use_quad6" default="1" />
+	<arg name="use_quad4" default="0" />
+	<arg name="use_quad5" default="0" />
+	<arg name="use_quad6" default="0" />
+	<arg name="use_quad7" default="0" />
+    <arg name="use_quad8" default="0" />
+    <arg name="use_quad9" default="0" />
+    <arg name="use_quad10" default="0" />
+    <arg name="use_quad11" default="0" />
+    <arg name="use_quad12" default="1" />
 
     <group if="$(arg use_quad1)" ns="$(arg robot_name)1">
-        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_1">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_1" output="screen">
             <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
             <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
             <param name="GUI" value="$(arg GUI)"/>
             <param name="SIM" value="$(arg SIM)"/>
             <param name="ID" value="1"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
             <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot1/cmd_vel" to="/hummingbird1/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -40,10 +53,16 @@
             <param name="GUI" value="$(arg GUI)"/>
             <param name="SIM" value="$(arg SIM)"/>
             <param name="ID" value="2"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
             <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot2/cmd_vel" to="/hummingbird2/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -54,10 +73,16 @@
             <param name="GUI" value="$(arg GUI)"/>
             <param name="SIM" value="$(arg SIM)"/>
             <param name="ID" value="3"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
             <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot3/cmd_vel" to="/hummingbird3/autopilot/velocity_command"/>
         </node>
     </group>
 
@@ -68,6 +93,7 @@
             <param name="GUI" value="$(arg GUI)"/>
             <param name="SIM" value="$(arg SIM)"/>
             <param name="ID" value="4"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
             <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
@@ -82,6 +108,7 @@
             <param name="GUI" value="$(arg GUI)"/>
             <param name="SIM" value="$(arg SIM)"/>
             <param name="ID" value="5"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
             <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
@@ -96,11 +123,137 @@
             <param name="GUI" value="$(arg GUI)"/>
             <param name="SIM" value="$(arg SIM)"/>
             <param name="ID" value="6"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
             <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
             <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
             <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
             <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
         </node>
     </group>
+
+    <group if="$(arg use_quad7)" ns="$(arg robot_name)7">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_7">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="7"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad8)" ns="$(arg robot_name)8">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_8">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="8"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad9)" ns="$(arg robot_name)9">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_9">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="9"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad10)" ns="$(arg robot_name)10">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_4">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="10"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad11)" ns="$(arg robot_name)11">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_11">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="11"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+        </node>
+    </group>
+
+    <group if="$(arg use_quad12)" ns="$(arg robot_name)0">
+        <node pkg="gmm_coverage" type="distributed_gmm" name="distributed_gmm_0">
+            <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
+            <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
+            <param name="GUI" value="$(arg GUI)"/>
+            <param name="SIM" value="$(arg SIM)"/>
+            <param name="ID" value="0"/>
+            <param name="GRAPHICS_ON" value="$(arg GRAPHICS_ON)"/>
+            <param name="AREA_SIZE_x" value="$(arg AREA_SIZE_x)"/>
+            <param name="AREA_SIZE_y" value="$(arg AREA_SIZE_y)"/>
+            <param name="AREA_LEFT" value="$(arg AREA_BOTTOM)"/>
+            <param name="AREA_BOTTOM" value="$(arg AREA_BOTTOM)"/>
+            <remap from="/turtlebot0/odom" to="/hummingbird0/ground_truth/odometry"/>
+            <remap from="/turtlebot1/odom" to="/hummingbird1/ground_truth/odometry"/>
+            <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+            <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+            <remap from="/turtlebot0/cmd_vel" to="/hummingbird0/autopilot/velocity_command"/>
+        </node>
+    </group>
+
+
+    <!-- RViz -->
+    <!-- <node if="$(arg GUI)" type="rviz" name="rviz" pkg="rviz" args="-d $(find gmm_coverage)/rviz/gmm.rviz" /> -->
+
+    
+    
+    <remap from="/turtlebot2/odom" to="/hummingbird2/ground_truth/odometry"/>
+    <remap from="/turtlebot3/odom" to="/hummingbird3/ground_truth/odometry"/>
+    <remap from="/turtlebot4/odom" to="/hummingbird4/ground_truth/odometry"/>
+    <remap from="/turtlebot5/odom" to="/hummingbird5/ground_truth/odometry"/>
+    <remap from="/turtlebot6/odom" to="/hummingbird6/ground_truth/odometry"/>
+    <remap from="/turtlebot7/odom" to="/hummingbird7/ground_truth/odometry"/>
+    <remap from="/turtlebot8/odom" to="/hummingbird8/ground_truth/odometry"/>
+    <remap from="/turtlebot9/odom" to="/hummingbird9/ground_truth/odometry"/>
+    <remap from="/turtlebot10/odom" to="/hummingbird10/ground_truth/odometry"/>
+    <remap from="/turtlebot11/odom" to="/hummingbird11/ground_truth/odometry"/>
+
+    
+    
+    <remap from="/turtlebot2/cmd_vel" to="/hummingbird2/autopilot/velocity_command"/>
+    <remap from="/turtlebot3/cmd_vel" to="/hummingbird3/autopilot/velocity_command"/>
+    <remap from="/turtlebot4/cmd_vel" to="/hummingbird4/autopilot/velocity_command"/>
+    <remap from="/turtlebot5/cmd_vel" to="/hummingbird5/autopilot/velocity_command"/>
+    <remap from="/turtlebot6/cmd_vel" to="/hummingbird6/autopilot/velocity_command"/>
+    <remap from="/turtlebot7/cmd_vel" to="/hummingbird7/autopilot/velocity_command"/>
+    <remap from="/turtlebot8/cmd_vel" to="/hummingbird8/autopilot/velocity_command"/>
+    <remap from="/turtlebot9/cmd_vel" to="/hummingbird9/autopilot/velocity_command"/>
+    <remap from="/turtlebot10/cmd_vel" to="/hummingbird10/autopilot/velocity_command"/>
+    <remap from="/turtlebot11/cmd_vel" to="/hummingbird11/autopilot/velocity_command"/>
 
 </launch>

@@ -54,8 +54,8 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 //Robots parameters ------------------------------------------------------
-const double MAX_ANG_VEL = 0.3;
-const double MAX_LIN_VEL = 0.2;         //set to turtlebot max velocities
+const double MAX_ANG_VEL = 1.5;
+const double MAX_LIN_VEL = 1.5;         //set to turtlebot max velocities
 const double b = 0.025;                 //for differential drive control (only if we are moving a differential drive robot (e.g. turtlebot))
 //------------------------------------------------------------------------
 const float CONVERGENCE_TOLERANCE = 0.1;
@@ -83,7 +83,7 @@ public:
         this->nh_priv_.getParam("SIM", SIM);
         this->nh_priv_.getParam("GUI", GUI);
         this->nh_priv_.getParam("ROBOT_RANGE", ROBOT_RANGE);
-        // this->nh_priv_.getParam("GRAPHICS_ON", GRAPHICS_ON);
+        this->nh_priv_.getParam("GRAPHICS_ON", GRAPHICS_ON);
         this->nh_priv_.getParam("AREA_SIZE_x", AREA_SIZE_x);
         this->nh_priv_.getParam("AREA_SIZE_y", AREA_SIZE_y);
         this->nh_priv_.getParam("AREA_LEFT", AREA_LEFT);
@@ -97,16 +97,17 @@ public:
         for (int i = 0; i < ROBOTS_NUM; i++)
         {
             odomSub_.push_back(nh_.subscribe<nav_msgs::Odometry>("/turtlebot" + std::to_string(i) + "/odom", 100, std::bind(&Controller::odomCallback, this, std::placeholders::_1, i)));
-            velPub_.push_back(nh_.advertise<geometry_msgs::Twist>("/turtlebot" + std::to_string(i) + "/cmd_vel", 1));
+            // velPub_.push_back(nh_.advertise<geometry_msgs::Twist>("/turtlebot" + std::to_string(i) + "/cmd_vel", 1));   
         }
+        velPub_.push_back(nh_.advertise<geometry_msgs::TwistStamped>("/turtlebot" + std::to_string(ID) + "/cmd_vel", 1));
     } else
     {
         // std::cout << "NON SONO IN SIMULAZIONE\n";
         for (int i = 0; i < ROBOTS_NUM; i++)
         {
-            velPub_.push_back(nh_.advertise<geometry_msgs::Twist>("/turtle" + std::to_string(i) + "/cmd_vel", 1));
             poseSub_.push_back(nh_.subscribe<geometry_msgs::PoseStamped>("/vrpn_client_node/turtle" + std::to_string(i) + "/pose", 100, std::bind(&Controller::poseCallback, this, std::placeholders::_1, i)));                
         }
+        velPub_.push_back(nh_.advertise<geometry_msgs::Twist>("/turtle" + std::to_string(ID) + "/cmd_vel", 1));
     }
     
     joySub_ = nh_.subscribe<geometry_msgs::Twist>("/joy_vel", 1, std::bind(&Controller::joy_callback, this, std::placeholders::_1));
@@ -114,6 +115,7 @@ public:
     voronoiPub = nh_.advertise<geometry_msgs::PolygonStamped>("/voronoi"+std::to_string(ID)+"_diagram", 1);
     timer_ = nh_.createTimer(ros::Duration(0.5), std::bind(&Controller::Formation, this));
 
+    // std::cout << "Publishers and Subscribers initialized \n";
     //----------------------------------------------------------- init Variables ---------------------------------------------------------
     pose_x = Eigen::VectorXd::Zero(ROBOTS_NUM);
     pose_y = Eigen::VectorXd::Zero(ROBOTS_NUM);
@@ -121,6 +123,8 @@ public:
     time(&this->timer_init_count);
     time(&this->timer_final_count);
 	this->got_gmm = false;//------------------------------------------------------------------------------------------------------------------------------------
+
+    std::cout << "Robot number " << ID << " ready to fly" << std::endl;
     }
     ~Controller()
     {
@@ -286,7 +290,7 @@ void Controller::gmm_callback(const gmm_msgs::GMM::ConstPtr msg)
     this->gmm_msg.gaussians = msg->gaussians;
     this->gmm_msg.weights = msg->weights;
     this->got_gmm = true;
-    // RCLCPP_INFO_STREAM(this->get_logger(), "Sto ricevendo il GMM");
+    // std::cout << "Sto ricevendo il GMM\n";
 }
 
 
@@ -424,10 +428,23 @@ void Controller::Formation()
         //-------------------------------------------------------------------------------------------------------
         //Compute velocities commands for the robot: differential drive control, for UAVs this is not necessary
         //-------------------------------------------------------------------------------------------------------
-        auto vel_msg = this->Diff_drive_compute_vel(vel_x, vel_y, this->pose_theta(ID));
+        // auto twist_msg = this->Diff_drive_compute_vel(vel_x, vel_y, this->pose_theta(ID));
+        geometry_msgs::TwistStamped vel_msg;
+        vel_msg.header.stamp = ros::Time::now();
+        vel_msg.header.frame_id = "hummingbird" + std::to_string(ID);
+        geometry_msgs::Twist twist_msg;
+        twist_msg.linear.x = vel_x;
+        twist_msg.linear.y = vel_y;
+
+        // calculate orientation to face centroid
+        double theta = atan2(centroid[1], centroid[0]);
+        double theta_diff = theta - this->pose_theta(ID);
+        if (theta_diff > M_PI) {theta_diff = theta_diff - 2*M_PI;}
+        twist_msg.angular.z = theta_diff;
+        vel_msg.twist = twist_msg;
         //-------------------------------------------------------------------------------------------------------
 
-        std::cout << "sending cmd_vel to " << ID << ":: " << vel_msg.angular.z << ", "<<vel_msg.linear.x;
+        std::cout << "sending cmd_vel to " << ID << ":: " << twist_msg.angular.z << ", "<<twist_msg.linear.x;
 
         this->velPub_[0].publish(vel_msg);
         if (GUI) {this->voronoiPub.publish(this->polygonStamped_msg);}

@@ -7,15 +7,13 @@ from roipoly import RoiPoly
 from matplotlib import pyplot as plt
 
 # ROS imports
-import rclpy
-from rclpy.node import Node
+import rospy
 from gmm_msgs.msg import GMM, Gaussian
 from geometry_msgs.msg import Point
-from ament_index_python.packages import get_package_prefix
+import rospkg
 
-
-AREA_X = 10.0
-AREA_Y = 10.0
+AREA_X = 60.0
+AREA_Y = 60.0
 COMPONENTS_NUM = 6
 
 # function to check if point is inside polygon
@@ -32,19 +30,22 @@ def isInside(x, y, xp, yp):
 
 
 
-class HSInterface(Node):
+class HSInterface():
     def __init__(self):
-        super().__init__('hs_interface')
-        self.publisher_ = self.create_publisher(GMM, '/gaussian_mixture_model', 1)
-        timer_period = 1
-        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.publisher_ = rospy.Publisher("/gaussian_mixture_model", GMM, queue_size=1)
+        timer_period = 1.0
+        self.timer = rospy.Timer(rospy.Duration(timer_period), self.timer_callback)
         self.gmm_msg = GMM()
         self.draw_roi()
 
 
     def draw_roi(self):
         # find blank image
-        pkg_path = get_package_prefix('gmm_coverage')
+        rospack = rospkg.RosPack()
+        # rospack.list()
+        
+        pkg_path = rospack.get_path('gmm_coverage')
+        print("Package path: {}".format(pkg_path))
         pkg_path = os.path.join(pkg_path, '..', '..', 'src', 'gmm_coverage')
         path = os.path.join(pkg_path, "scripts/blank.jpg")
 
@@ -78,12 +79,14 @@ class HSInterface(Node):
         # generate 4000 points in ROI
         xp = []
         yp = []
-        for i in range(4000):
+        i = 0
+        while i < 4000:
             xt = xmin + np.random.random()*(xmax-xmin)
             yt = ymin + np.random.random()*(ymax-ymin)
             if isInside(xt, yt, xr, yr):
                 xp.append(xt)
                 yp.append(yt)
+                i += 1
 
         print("Number of points: {}".format(len(xp)))
 
@@ -132,7 +135,7 @@ class HSInterface(Node):
         
 
 
-    def timer_callback(self):
+    def timer_callback(self, e):
         self.publisher_.publish(self.gmm_msg)
 
 
@@ -140,21 +143,12 @@ class HSInterface(Node):
 
 
 def main(args=None):
-    rclpy.init(args=args)
+    rospy.init_node("hs_interface")
     hsiObj = HSInterface()    
-    rclpy.spin(hsiObj)
-
-    hsiObj.destroy_node()
-    rclpy.shutdown()
+    rospy.spin()
     
 
 
 
 if __name__ == '__main__':
     main()
-
-
-
-    
-
-
