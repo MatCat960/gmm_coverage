@@ -444,7 +444,7 @@ void Controller::Formation()
         vel_msg.twist = twist_msg;
         //-------------------------------------------------------------------------------------------------------
 
-        std::cout << "sending cmd_vel to " << ID << ":: " << twist_msg.angular.z << ", "<<twist_msg.linear.x;
+        std::cout << "sending cmd_vel to " << ID << ":: " << twist_msg.angular.z << ", "<<twist_msg.linear.x << std::endl;
 
         this->velPub_[0].publish(vel_msg);
         if (GUI) {this->voronoiPub.publish(this->polygonStamped_msg);}
