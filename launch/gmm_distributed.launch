@@ -367,7 +367,7 @@
     <node if="$(arg GUI)" type="rviz" name="rviz" pkg="rviz" args="-d $(find gmm_coverage)/rviz/roads_gmm.rviz" />
         
     <node if="$(arg GUI)" type="gmm_visualizer.py" pkg="gmm_coverage" name="gmm_visualizer" />
-    <node if="$(arg GUI)" type="map_server" pkg="map_server" name="map_server" args="$(find gmm_coverage)/maps/colosseo/colosseo.yaml">
+    <node if="$(arg GUI)" type="map_server" pkg="map_server" name="map_server" args="$(find gmm_coverage)/maps/desert/desert.yaml">
         <param name="frame_id" value="world"/>
     </node>
 

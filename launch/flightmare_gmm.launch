@@ -3,7 +3,7 @@
 	<arg name="quad_name" default="hummingbird" />
 	<arg name="mav_name" default="$(arg quad_name)" />
 	<arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" />
-	<arg name="world_name" default="$(find gmm_coverage)/worlds/empty.world" />
+	<arg name="world_name" default="$(find gmm_coverage)/worlds/desert.world" />
 	<arg name="use_unity_editor" default="false" />
 	<arg name="paused" value="true" />
 	<arg name="gui" value="false" />
