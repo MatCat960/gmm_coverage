@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="filename" default="desert"/>
+    <arg name="COMPONENTS_NUMBER" default="20"/>
+    <arg name="SHOW_IMAGES" default="false"/>
+    <arg name="SAVE_IMAGES" default="false"/>
+
+    <node name="roads_gmm_publisher" pkg="gmm_coverage" type="gmm_publisher.py" output="screen">
+        <param name="filename" value="$(arg filename)"/>
+        <param name="COMPONENTS_NUMBER" value="$(arg COMPONENTS_NUMBER)"/>
+        <param name="SHOW_IMAGES" value="$(arg SHOW_IMAGES)"/>
+        <param name="SAVE_IMAGES" value="$(arg SAVE_IMAGES)"/>
+    </node>
+    
+
+</launch>
