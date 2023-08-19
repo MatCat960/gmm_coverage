@@ -3,7 +3,7 @@
 	<arg name="quad_name" default="hummingbird" />
 	<arg name="mav_name" default="$(arg quad_name)" />
 	<arg name="model" value="$(find rotors_description)/urdf/mav_generic_odometry_sensor.gazebo" />
-	<arg name="world_name" default="$(find gmm_coverage)/worlds/desert.world" />
+	<arg name="world_name" default="$(find gmm_coverage)/worlds/empty.world" />
 	<arg name="use_unity_editor" default="false" />
 	<arg name="paused" value="true" />
 	<arg name="gui" value="false" />
@@ -31,6 +31,32 @@
 	<arg name="use_quad11" default="1" />
 	<arg name="use_quad12" default="1" />
 
+	<arg name="x1" default="1" />
+	<arg name="y1" default="1" />
+	<arg name="x2" default="2" />
+	<arg name="y2" default="2" />
+	<arg name="x3" default="3" />
+	<arg name="y3" default="3" />
+	<arg name="x4" default="4" />
+	<arg name="y4" default="4" />
+	<arg name="x5" default="5" />
+	<arg name="y5" default="5" />
+	<arg name="x6" default="6" />
+	<arg name="y6" default="6" />
+	<arg name="x7" default="7" />
+	<arg name="y7" default="7" />
+	<arg name="x8" default="8" />
+	<arg name="y8" default="8" />
+	<arg name="x9" default="9" />
+	<arg name="y9" default="9" />
+	<arg name="x10" default="10" />
+	<arg name="y10" default="10" />
+	<arg name="x11" default="11" />
+	<arg name="y11" default="11" />
+	<arg name="x12" default="12" />
+	<arg name="y12" default="12" />
+
+
 	<!-- Gazebo stuff to spawn the world ! -->
 	<env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find gmm_coverage)/models:$(arg custom_models)" />
 	<env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find gmm_coverage)/models" />
@@ -51,8 +77,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)1" />
-		<arg name="x" value="4" />
-		<arg name="y" value="-4" />
+		<arg name="x" value="$(eval x1)" />
+		<arg name="y" value="$(eval y1)" />
 		<arg name="yaw" value="2.356" />
 	</include>
 </group>
@@ -64,8 +90,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)2" />
-		<arg name="x" value="-4.0" />
-		<arg name="y" value="-4.0" />
+		<arg name="x" value="$(eval x2)" />
+		<arg name="y" value="$(eval y2)" />
 		<arg name="yaw" value="0.785" />
 	</include>
 </group>
@@ -77,8 +103,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)3" />
-		<arg name="x" value="-4" />
-		<arg name="y" value="4" />
+		<arg name="x" value="$(eval x3)" />
+		<arg name="y" value="$(eval y3)" />
 		<arg name="yaw" value="-0.785" />
 	</include>
 </group>
@@ -90,8 +116,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)4" />
-		<arg name="x" value="-6.0" />
-		<arg name="y" value="0" />
+		<arg name="x" value="$(eval x4)" />
+		<arg name="y" value="$(eval y4)" />
 		<arg name="yaw" value="0.0" />
 	</include>
 </group>
@@ -103,8 +129,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)5" />
-		<arg name="x" value="6.0" />
-		<arg name="y" value="0" />
+		<arg name="x" value="$(eval x5)" />
+		<arg name="y" value="$(eval y5)" />
 		<arg name="yaw" value="3.14" />
 	</include>
 </group>
@@ -116,8 +142,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)6" />
-		<arg name="x" value="0.0" />
-		<arg name="y" value="-6.0" />
+		<arg name="x" value="$(eval x6)" />
+		<arg name="y" value="$(eval y6)" />
 		<arg name="yaw" value="1.5708" />
 	</include>
 </group>
@@ -129,8 +155,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)7" />
-		<arg name="x" value="0.0" />
-		<arg name="y" value="6.0" />
+		<arg name="x" value="$(eval x7)" />
+		<arg name="y" value="$(eval y7)" />
 		<arg name="yaw" value="-1.5708" />
 	</include>
 </group>
@@ -142,8 +168,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)8" />
-		<arg name="x" value="-3.0" />
-		<arg name="y" value="-6.0" />
+		<arg name="x" value="$(eval x8)" />
+		<arg name="y" value="$(eval y8)" />
 		<arg name="yaw" value="1.5708" />
 	</include>
 </group>
@@ -155,8 +181,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)9" />
-		<arg name="x" value="-6.0" />
-		<arg name="y" value="-3.0" />
+		<arg name="x" value="$(eval x9)" />
+		<arg name="y" value="$(eval y9)" />
 		<arg name="yaw" value="1.5708" />
 	</include>
 </group>
@@ -168,8 +194,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)0" />
-		<arg name="x" value="4.0" />
-		<arg name="y" value="4.0" />
+		<arg name="x" value="$(eval x12)" />
+		<arg name="y" value="$(eval y12)" />
 		<arg name="yaw" value="-2.356" />
 	</include>
 </group>
@@ -181,8 +207,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)10" />
-		<arg name="x" value="0.5" />
-		<arg name="y" value="0.5" />
+		<arg name="x" value="$(eval x10)" />
+		<arg name="y" value="$(eval y10)" />
 		<arg name="yaw" value="1.5708" />
 	</include>
 </group>
@@ -194,8 +220,8 @@
 		<arg name="enable_logging" value="$(arg enable_logging)" />
 		<arg name="enable_ground_truth" value="$(arg enable_ground_truth)" />
 		<arg name="log_file" value="$(arg mav_name)11" />
-		<arg name="x" value="-2.0" />
-		<arg name="y" value="0.0" />
+		<arg name="x" value="$(eval x11)" />
+		<arg name="y" value="$(eval y11)" />
 		<arg name="yaw" value="1.5708" />
 	</include>
 </group>
