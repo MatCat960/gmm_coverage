@@ -24,5 +24,22 @@ x11=$((RANDOM % 251))
 y11=$((RANDOM % 175))
 x12=$((RANDOM % 251))
 y12=$((RANDOM % 175))
+x13=$((RANDOM % 251))
+y13=$((RANDOM % 175))
+x14=$((RANDOM % 251))
+y14=$((RANDOM % 175))
+x15=$((RANDOM % 251))
+y15=$((RANDOM % 175))
+x16=$((RANDOM % 251))
+y16=$((RANDOM % 175))
+x17=$((RANDOM % 251))
+y17=$((RANDOM % 175))
+x18=$((RANDOM % 251))
+y18=$((RANDOM % 175))
+x19=$((RANDOM % 251))
+y19=$((RANDOM % 175))
+x20=$((RANDOM % 251))
+y20=$((RANDOM % 175))
 
-roslaunch gmm_coverage flightmare_gmm.launch x1:=$x1 y1:=$y1 x2:=$x2 y2:=$y2 x3:=$x3 y3:=$y3 x4:=$x4 y4:=$y4 x5:=$x5 y5:=$y5 x6:=$x6 y6:=$y6 x7:=$x7 y7:=$y7 x8:=$x8 y8:=$y8 x9:=$x9 y9:=$y9 x10:=$x10 y10:=$y10 x11:=$x11 y11:=$y11 x12:=$x12 y12:=$y12
+
+roslaunch gmm_coverage flightmare_gmm.launch x1:=$x1 y1:=$y1 x2:=$x2 y2:=$y2 x3:=$x3 y3:=$y3 x4:=$x4 y4:=$y4 x5:=$x5 y5:=$y5 x6:=$x6 y6:=$y6 x7:=$x7 y7:=$y7 x8:=$x8 y8:=$y8 x9:=$x9 y9:=$y9 x10:=$x10 y10:=$y10 x11:=$x11 y11:=$y11 x12:=$x12 y12:=$y12 x13:=$x13 y13:=$y13 x14:=$x14 y14:=$y14 x15:=$x15 y15:=$y15 x16:=$x16 y16:=$y16 x17:=$x17 y17:=$y17 x18:=$x18 y18:=$y18 x19:=$x19 y19:=$y19 x20:=$x20 y20:=$y20
