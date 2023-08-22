@@ -757,7 +757,7 @@
 
 
     <!-- Performance evaluator -->
-    <node name="performance_eval" pkg="gmm_coverage" type="performance_eval" output="screen">
+    <node if="$(arg SAVE_LOGS)" name="performance_eval" pkg="gmm_coverage" type="performance_eval" output="screen">
         <param name="ROBOTS_NUM" value="$(arg ROBOTS_NUM)"/>
             <param name="ROBOT_RANGE" value="$(arg ROBOT_RANGE)"/>
             <param name="SIM" value="$(arg SIM)"/>

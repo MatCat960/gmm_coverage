@@ -281,7 +281,6 @@ void Controller::gmm_callback(const gmm_msgs::GMM::ConstPtr msg)
 
 void Controller::eval()
 {
-    std::cout << "Main loop \n";
     if (!this->got_gmm) return;
 
     // ------------------------------------------------------ Environment definition -----------------------------------------------------
@@ -333,145 +332,12 @@ void Controller::eval()
 
     if (SAVE_LOGS)
     {
-        std::string text = std::to_string(effect) + ", " + std::to_string(eps) + "\n";
+        std::string text = std::to_string(effect) + " " + std::to_string(eps) + "\n";
         write_log_file(text);
     }
 
-
-
-
 }
 
-// void Controller::Formation()
-// {
-//     if(!this->got_gmm) return;	
-//     auto timerstart = std::chrono::high_resolution_clock::now();
-//     //Parameters
-//     //double min_dist = 0.4;         //avoid robot collision
-//     int K_gain = 1;                  //Lloyd law gain
-//     this->log_line_counter = this->log_line_counter + 1;
-
-//     //Variables
-//     double vel_x=0.0, vel_y=0.0, vel_z = 0.0;
-//     std::vector<Vector2<double>> seeds;
-//     std::vector<std::vector<float>> centroids;
-//     std::vector<double> vel; std::vector<float> centroid;
-
-//     // ------------------------------------------------------ Environment definition -----------------------------------------------------
-//     Box<double> AreaBox{AREA_LEFT, AREA_BOTTOM, AREA_SIZE_x + AREA_LEFT, AREA_SIZE_y + AREA_BOTTOM};
-//     Box<double> RangeBox{-ROBOT_RANGE, -ROBOT_RANGE, ROBOT_RANGE, ROBOT_RANGE};
-
-//     std::vector<Box<double>> ObstacleBoxes = {};
-
-
-//     for (int i = 0; i < ROBOTS_NUM; ++i)
-//     {
-//         if ((this->pose_x(i) != 0.0) && (this->pose_y(i) != 0.0))
-//         {
-//             seeds.push_back({this->pose_x(i), this->pose_y(i)});    
-//         }
-//         // centroids.push_back({this->pose_x(i), this->pose_y(i)});
-//     }
-
-//     if ((this->pose_x(ID) != 0.0) && (this->pose_y(ID) != 0.0))
-//     {
-//         bool robot_stopped = true;
-
-//         //-----------------Voronoi--------------------
-//         //Rielaborazione vettore "points" globale in coordinate locali
-//         auto local_seeds_i = reworkPointsVector(seeds, seeds[ID]);
-
-//         // std::cout << "Punto medio gaussiana 1: " << this->gmm_msg.gaussians[0].mean_point.x << ", " << this->gmm_msg.gaussians[0].mean_point.y << std::endl; 
-//         //Filtraggio siti esterni alla box (simula azione del sensore)
-//         auto flt_seeds = filterPointsVector(local_seeds_i, RangeBox);
-//         auto diagram = generateDecentralizedDiagram(flt_seeds, RangeBox, seeds[ID], ROBOT_RANGE, AreaBox);
-// 	    // std::cout<<"GOT DIAGRAM\n";
-//         auto verts = diagram.getVertices();
-
-//         this->polygon_msg.points.clear();
-
-//         if (GUI)
-//         {
-//             for (auto v : verts)
-//             {
-//                 geometry_msgs::Point32 p;
-//                 p.x = this->pose_x(ID) + v.point.x;                 // global position
-//                 p.y = this->pose_y(ID) + v.point.y;                 // global position
-//                 p.z = 0.0;
-//                 this->polygon_msg.points.push_back(p);   
-//             }
-//         }
-//         // DEBUG
-//         // std::cout << "Vertici Poligono: \n";
-//         // for (int i = 0; i < this->polygon_msg.points.size(); ++i)
-//         // {
-//         //     std::cout << this->polygon_msg.points[i].x << ", " << this->polygon_msg.points[i].y << std::endl;
-//         // }
-
-//         this->polygonStamped_msg.header.stamp = ros::Time::now();
-//         this->polygonStamped_msg.header.frame_id = "odom";
-//         this->polygonStamped_msg.polygon = this->polygon_msg;
-//         //compute centroid -- GAUSSIAN DISTRIBUTION
-//         centroid = computeGMMPolygonCentroid2(diagram, this->gmm_msg, ObstacleBoxes);
-
-//         double norm = sqrt(centroid[0]*centroid[0] + centroid[1]*centroid[1]);
-//         if (norm > CONVERGENCE_TOLERANCE)
-//         {
-//             vel_x = K_gain*(centroid[0]);
-//             vel_y = K_gain*(centroid[1]);
-//             vel_z = K_gain*(centroid[2]);
-//             robot_stopped = false;
-//         } else {
-//             vel_x = 0.0;
-//             vel_y = 0.0;
-//             vel_z = 0.0;
-//             std::cout << "ROBOT " << ID << ": STOPPED" << std::endl;
-//         }
-
-//         std::cout<<"sending velocities to " << ID << ":: " << vel_x << ", "<<vel_y<<std::endl;
-
-//         //-------------------------------------------------------------------------------------------------------
-//         //Compute velocities commands for the robot: differential drive control, for UAVs this is not necessary
-//         //-------------------------------------------------------------------------------------------------------
-//         // auto twist_msg = this->Diff_drive_compute_vel(vel_x, vel_y, this->pose_theta(ID));
-//         geometry_msgs::TwistStamped vel_msg;
-//         vel_msg.header.stamp = ros::Time::now();
-//         vel_msg.header.frame_id = "hummingbird" + std::to_string(ID);
-//         geometry_msgs::Twist twist_msg;
-//         twist_msg.linear.x = vel_x;
-//         twist_msg.linear.y = vel_y;
-
-//         // calculate orientation to face centroid
-//         double theta = atan2(centroid[1], centroid[0]);
-//         double theta_diff = theta - this->pose_theta(ID);
-//         if (theta_diff > M_PI) {theta_diff = theta_diff - 2*M_PI;}
-//         twist_msg.angular.z = theta_diff;
-//         vel_msg.twist = twist_msg;
-//         //-------------------------------------------------------------------------------------------------------
-
-//         std::cout << "sending cmd_vel to " << ID << ":: " << twist_msg.angular.z << ", "<<twist_msg.linear.x << std::endl;
-
-//         this->velPub_[0].publish(vel_msg);
-//         if (GUI) {this->voronoiPub.publish(this->polygonStamped_msg);}
-
-//         if (robot_stopped == true)
-//         {
-//             time(&this->timer_final_count);
-//             if (this->timer_final_count - this->timer_init_count >= shutdown_timer)
-//             {
-//                 //shutdown node
-//                 std::cout<<"SHUTTING DOWN THE NODE"<<std::endl;
-//                 this->stop();   //stop the controller
-//                 ros::shutdown();
-//             }
-//         } else {
-//             time(&this->timer_init_count);
-//         }
-
-//         auto end = std::chrono::high_resolution_clock::now();
-//         std::cout<<"Computation time cost: -----------------: "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - timerstart).count()<<" ms\n";
-//     }
-// }
 
 
 
