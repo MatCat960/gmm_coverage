@@ -27,8 +27,8 @@
 	<arg name="use_quad7" default="1" />
 	<arg name="use_quad8" default="1" />
 	<arg name="use_quad9" default="1" />
-	<arg name="use_quad10" default="1" />
-	<arg name="use_quad11" default="1" />
+	<arg name="use_quad10" default="0" />
+	<arg name="use_quad11" default="0" />
 	<arg name="use_quad12" default="0" />
     <arg name="use_quad13" default="0" />
     <arg name="use_quad14" default="0" />

@@ -1335,6 +1335,191 @@ std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gm
     return C;
 }
 
+// Function to calculate effectiveness
+template<typename T>
+float calculateEffectiveness(const Diagram<T> &polygon, gmm_msgs::GMM gmm, T discretize_precision = 1.0/10.0){
+    
+    // Transform GMM to local coordinates
+    gmm_msgs::GMM gmm_local;
+    gmm_local.weights = gmm.weights;
+    for (long unsigned int i = 0; i < gmm.gaussians.size(); ++i)
+    {
+        gmm_local.gaussians.push_back(gmm.gaussians[i]);
+        gmm_local.gaussians[i].mean_point.x = gmm.gaussians[i].mean_point.x - polygon.getGlobalPoint().x;
+        gmm_local.gaussians[i].mean_point.y = gmm.gaussians[i].mean_point.y - polygon.getGlobalPoint().y;
+        gmm_local.gaussians[i].mean_point.z = 0.0;
+        gmm_local.gaussians[i].covariance = gmm.gaussians[i].covariance;
+    }
+
+    //DEBUG
+    // std::cout<<"gaussian relative position ::: "<<pt_means[0]<<"\n"<<std::scientific;
+    // std::cout << "Elenco gaussiane relative: \n";
+    // for (int i=0; i<gmm_local.gaussians.size(); i++)
+    // {
+    //     std::cout << gmm_local.gaussians[i].mean_point.x << ", " << gmm_local.gaussians[i].mean_point.y << std::endl;
+    // }
+
+    auto seed = polygon.getSite(0);
+    auto halfedge = seed->face->outerComponent;
+
+    //trova gli estremi del rettangolo che contengono il poligono
+    float x_inf = std::min(halfedge->origin->point.x, halfedge->destination->point.x);
+    float x_sup = std::max(halfedge->origin->point.x, halfedge->destination->point.x);
+    float y_inf = std::min(halfedge->origin->point.y, halfedge->destination->point.y);
+    float y_sup = std::max(halfedge->origin->point.y, halfedge->destination->point.y);
+    float z_inf = -2.0; float z_sup = 2.0;
+    halfedge = halfedge->next;
+
+
+    //DEBUG
+    std::vector<double> debug_x;
+    std::vector<double> debug_y;
+    debug_x.push_back(halfedge->origin->point.x);
+    debug_y.push_back(halfedge->origin->point.y);
+    debug_x.push_back(halfedge->destination->point.x);
+    debug_y.push_back(halfedge->destination->point.y);
+
+    do{
+        //------------------ x component --------------------
+        if (x_inf > halfedge->destination->point.x)
+        {
+            x_inf = halfedge->destination->point.x;
+
+        } else if (x_sup < halfedge->destination->point.x)
+        {
+            x_sup = halfedge->destination->point.x;
+        }
+
+        //------------------ y component --------------------
+        if (y_inf > halfedge->destination->point.y)
+        {
+            y_inf = halfedge->destination->point.y;
+        } else if (y_sup < halfedge->destination->point.y)
+        {
+            y_sup = halfedge->destination->point.y;
+        }
+
+        halfedge = halfedge->next;
+        //DEBUG
+        debug_x.push_back(halfedge->destination->point.x);
+        debug_y.push_back(halfedge->destination->point.y);
+
+    } while (halfedge != seed->face->outerComponent);
+
+
+
+    //DEBUG
+    /*
+    std::cout<<"debug vectors x: "<<std::scientific;
+    for (int i = 0; i < debug_x.size(); ++i)
+    {
+        std::cout<<debug_x[i]<<" "<<std::scientific;
+    }
+    std::cout<<"\n"<<std::scientific;
+
+    std::cout<<"debug vectors y: "<<std::scientific;
+    for (int i = 0; i < debug_y.size(); ++i)
+    {
+        std::cout<<debug_y[i]<<" "<<std::scientific;
+    }
+    std::cout<<"\n"<<std::scientific;
+    */
+
+    float dx = (x_sup - x_inf)/2.0 * discretize_precision;
+    float dy = (y_sup - y_inf)/2.0 * discretize_precision;
+    float dz = (z_sup - z_inf)/2.0 * discretize_precision;
+    float dV = dx*dy*dz;
+    float V = 0;
+
+
+    for (float i = (float)x_inf; i <= x_sup; i=i+dx)
+    {
+        for (float j = (float)y_inf; j <= y_sup; j=j+dy)
+        {
+            //std::cout<<"j value :: "<<j<<"\n"<<std::scientific;
+            bool inArea = inPolygon(polygon, Vector2<double> {i+dx, j+dy});
+            if (inArea)
+            {
+                std::vector<float> point = {i, j};
+                float dV_pdf;
+                if (gmm_local.gaussians.size() <= 1)
+                {
+                    dV_pdf = dV*single_component_pdf(gmm_local.gaussians[0], point);
+                } else {
+                    dV_pdf = dV*mixture_pdf(gmm_local, point);
+                }
+                V = V + dV_pdf;
+            }
+        }
+    }
+
+    return V;
+}
+
+// Function to calculate area of the Voronoi cell
+template<typename T>
+float calculateArea(const Diagram<T> &polygon, T discretize_precision = 1.0/100.0){
+
+    auto seed = polygon.getSite(0);
+    auto halfedge = seed->face->outerComponent;
+
+    //trova gli estremi del rettangolo che contengono il poligono
+    float x_inf = std::min(halfedge->origin->point.x, halfedge->destination->point.x);
+    float x_sup = std::max(halfedge->origin->point.x, halfedge->destination->point.x);
+    float y_inf = std::min(halfedge->origin->point.y, halfedge->destination->point.y);
+    float y_sup = std::max(halfedge->origin->point.y, halfedge->destination->point.y);
+    float z_inf = -2.0; float z_sup = 2.0;
+    halfedge = halfedge->next;
+
+
+    do{
+        //------------------ x component --------------------
+        if (x_inf > halfedge->destination->point.x)
+        {
+            x_inf = halfedge->destination->point.x;
+
+        } else if (x_sup < halfedge->destination->point.x)
+        {
+            x_sup = halfedge->destination->point.x;
+        }
+
+        //------------------ y component --------------------
+        if (y_inf > halfedge->destination->point.y)
+        {
+            y_inf = halfedge->destination->point.y;
+        } else if (y_sup < halfedge->destination->point.y)
+        {
+            y_sup = halfedge->destination->point.y;
+        }
+
+        halfedge = halfedge->next;
+
+    } while (halfedge != seed->face->outerComponent);
+
+
+    float dx = (x_sup - x_inf)/2.0 * discretize_precision;
+    float dy = (y_sup - y_inf)/2.0 * discretize_precision;
+    float dz = (z_sup - z_inf)/2.0 * discretize_precision;
+    float dV = dx*dy*dz;
+    float V = 0;
+
+
+    for (float i = (float)x_inf; i <= x_sup; i=i+dx)
+    {
+        for (float j = (float)y_inf; j <= y_sup; j=j+dy)
+        {
+            //std::cout<<"j value :: "<<j<<"\n"<<std::scientific;
+            bool inArea = inPolygon(polygon, Vector2<double> {i+dx, j+dy});
+            if (inArea)
+            {
+                V = V + dV;
+            }
+        }
+    }
+
+    return V;
+}
+
 template<typename T>
 std::vector<Vector2<T>> computeDiagramsCentroids(const std::vector<Diagram<T>>& diagrams, std::vector<Vector2<T>> pt_means, std::vector<T> vars, double discretize_precision = 1.0/100.0){
     //Vettore dei centroidi gaussiani

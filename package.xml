@@ -56,6 +56,7 @@
   <depend>visualization_msgs</depend>
   <depend>gaussian_mixture_model</depend>
   <depend>gmm_msgs</depend>
+  <depend>roslib</depend>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_export_depend>roscpp</build_export_depend>

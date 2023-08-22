@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   visualization_msgs
   gmm_msgs
+  roslib
   )
 # find_package(gmm_msgs REQUIRED)
 find_package(gaussian_mixture_model REQUIRED)
@@ -34,24 +35,6 @@ find_package(SFML REQUIRED COMPONENTS graphics window system)
 # )
 
 
-set(dependencies
-  "geometry_msgs"
-  "nav_msgs"
-  "rclcpp"
-  "rclpy"
-  "tf2"
-  "tf2_ros"
-  "sensor_msgs"
-  "gmm_msgs"
-  "visualization_msgs"
-  "GaussianMixtureModel"
-)
-
-  set(SFML_libraries
-  "sfml-graphics"
-  "sfml-window"
-  "sfml-system"
-)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -223,6 +206,15 @@ target_link_libraries(centralized_gmm
 add_executable(distributed_gmm src/distributed_gmm.cpp)
 add_dependencies(distributed_gmm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(distributed_gmm
+  ${catkin_LIBRARIES}
+  ${gaussian_mixture_model_LIBRARIES}
+  # ${dependencies}
+  ${SFML_libraries}
+)
+
+add_executable(performance_eval src/performance_eval.cpp)
+add_dependencies(performance_eval ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(performance_eval
   ${catkin_LIBRARIES}
   ${gaussian_mixture_model_LIBRARIES}
   # ${dependencies}
