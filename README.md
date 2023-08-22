@@ -16,4 +16,13 @@ This repository contains C++ and Python code to define and handle Gaussian Mixtu
 
   
 
-# TODO
+## Requirements
+
+* [ROS Noetic](http://wiki.ros.org/noetic/Installation/Ubuntu)
+* Eigen3: `sudo apt install libeigen3-dev`
+* [Tensorflow](https://www.tensorflow.org/install/pip)
+* [Roads Detection Model](https://drive.google.com/file/d/1dfdPuzAOjxv7tyFnCo3qPSDg3BL5kKfM/view?usp=drive_link)
+
+
+## How to use it?
+### TODO
