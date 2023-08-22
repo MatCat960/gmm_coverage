@@ -1501,7 +1501,8 @@ float calculateArea(const Diagram<T> &polygon, T discretize_precision = 1.0/100.
     float dy = (y_sup - y_inf)/2.0 * discretize_precision;
     float dz = (z_sup - z_inf)/2.0 * discretize_precision;
     float dV = dx*dy*dz;
-    float V = 0;
+    float dA = dx*dy;
+    float A = 0;
 
 
     for (float i = (float)x_inf; i <= x_sup; i=i+dx)
@@ -1512,12 +1513,12 @@ float calculateArea(const Diagram<T> &polygon, T discretize_precision = 1.0/100.
             bool inArea = inPolygon(polygon, Vector2<double> {i+dx, j+dy});
             if (inArea)
             {
-                V = V + dV;
+                A = A + dA;
             }
         }
     }
 
-    return V;
+    return A;
 }
 
 template<typename T>

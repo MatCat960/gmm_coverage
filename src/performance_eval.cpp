@@ -124,7 +124,7 @@ public:
     time(&this->timer_init_count);
     time(&this->timer_final_count);
 	this->got_gmm = false;
-    area_max = ROBOTS_NUM * M_PI * ROBOT_RANGE * ROBOT_RANGE;               // max area covered by the swarm
+    area_max = ROBOTS_NUM * M_PI * pow(0.5*ROBOT_RANGE, 2);               // max area covered by the swarm
     //------------------------------------------------------------------------------------------------------------------------------------
     }
     ~Controller()
@@ -320,6 +320,7 @@ void Controller::eval()
 
             // Calculate area of current diagram
             double area_i = calculateArea(diagram);
+            std::cout << "Current area: " << area_i << std::endl;
             surf = surf + area_i;
         }
     }
@@ -332,7 +333,7 @@ void Controller::eval()
 
     if (SAVE_LOGS)
     {
-        std::string text = std::to_string(effect) + " " + std::to_string(eps) + "\n";
+        std::string text = std::to_string(effect) + " " + std::to_string(surf) + "\n";
         write_log_file(text);
     }
 
