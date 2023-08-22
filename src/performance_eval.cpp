@@ -331,6 +331,12 @@ void Controller::eval()
     std::cout << "Area coverage efficiency: " << eps << std::endl;
     std::cout << "-------------------------------------\n";
 
+    if (SAVE_LOGS)
+    {
+        std::string text = std::to_string(effect) + ", " + std::to_string(eps) + "\n";
+        write_log_file(text);
+    }
+
 
 
 
@@ -476,7 +482,6 @@ void Controller::open_log_file()
     char buffer [80];
 
     std::string path = ros::package::getPath("gmm_coverage");
-    std::cout << "pkg path: " << path << std::endl;
 
     if (IsPathExist(path + "/logs"))     //check if the folder exists
     {
