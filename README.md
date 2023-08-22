@@ -22,6 +22,7 @@ This repository contains C++ and Python code to define and handle Gaussian Mixtu
 * Eigen3: `sudo apt install libeigen3-dev`
 * [Tensorflow](https://www.tensorflow.org/install/pip)
 * [Roads Detection Model](https://drive.google.com/file/d/1dfdPuzAOjxv7tyFnCo3qPSDg3BL5kKfM/view?usp=drive_link)
+    (to be put inside `gmm_coverage/src/`)
 
 
 ## How to use it?
