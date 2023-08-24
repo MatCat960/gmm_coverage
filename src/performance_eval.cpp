@@ -290,6 +290,7 @@ void Controller::eval()
     std::vector<Vector2<double>> seeds;
     effect = 0.0;
     double surf = 0.0;
+    double optim = 0.0;
 
     for (int i = 0; i < ROBOTS_NUM; ++i)
     {
@@ -322,6 +323,12 @@ void Controller::eval()
             double area_i = calculateArea(diagram);
             std::cout << "Current area: " << area_i << std::endl;
             surf = surf + area_i;
+
+            // Centralized voronoi (for config optimality)
+            auto diagram_centr = generateCentralizedDiagram(seeds, AreaBox);
+            double optim_i = calculateOptim(diagram_centr, this->gmm_msg);
+            // std::cout << "Current optimality: " << optim_i << std::endl;
+            optim = optim - optim_i;
         }
     }
 
@@ -329,11 +336,12 @@ void Controller::eval()
     std::cout << "Total effectiveness: " << effect << std::endl;
     std::cout << "Total area: " << surf << std::endl;
     std::cout << "Area coverage efficiency: " << eps << std::endl;
+    std::cout << "Optimality of configuration: " << optim << std::endl;
     std::cout << "-------------------------------------\n";
 
     if (SAVE_LOGS)
     {
-        std::string text = std::to_string(effect) + " " + std::to_string(surf) + "\n";
+        std::string text = std::to_string(effect) + " " + std::to_string(surf) + " " + std::to_string(optim) + "\n";
         write_log_file(text);
     }
 
