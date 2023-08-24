@@ -44,6 +44,7 @@ Parameters:
 Use [RotorS simulator](https://github.com/ethz-asl/rotors_simulator) to open a Gazebo world and spawn a desired number of UAVs in random starting positions.
 
 `cd gmm_coverage/`
+
 `./run.bash`
 
 Main Parameters:
