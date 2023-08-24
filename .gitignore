@@ -48,3 +48,9 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Large dataset files
+*.h5
+
+# Log files
+logs/
+
