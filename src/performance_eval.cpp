@@ -218,7 +218,7 @@ void Controller::stop()
     if (SAVE_LOGS)
     {
         std::cout << "Final position of the robots: \n";
-        for (int i = 0; i < ROBOT_RANGE; i++)
+        for (int i = 0; i < ROBOTS_NUM; i++)
         {
             std::string text = std::to_string(this->pose_x(i)) + " " + std::to_string(this->pose_y(i)) + " " + std::to_string(this->pose_theta(i)) + "\n";
             write_log_file(text);
