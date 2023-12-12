@@ -26,7 +26,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(turtlebot3_msgs REQUIRED)
 find_package(gmm_msgs REQUIRED)
-find_package(GaussianMixtureModel REQUIRED)
+# find_package(GaussianMixtureModel REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(SFML REQUIRED COMPONENTS graphics window system)
@@ -53,7 +53,7 @@ set(dependencies
   "sensor_msgs"
   "turtlebot3_msgs"
   "visualization_msgs"
-  "GaussianMixtureModel"
+  # "GaussianMixtureModel"
   "gmm_msgs"
 )
 
@@ -133,7 +133,7 @@ ament_export_dependencies(tf2_ros)
 ament_export_dependencies(turtlebot3_msgs)
 ament_export_dependencies(gmm_msgs)
 ament_export_dependencies(visualization_msgs)
-ament_export_dependencies(GaussianMixtureModel)
+# ament_export_dependencies(GaussianMixtureModel)
 ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()
