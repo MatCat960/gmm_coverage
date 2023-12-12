@@ -21,12 +21,14 @@ TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-    ROBOTS_NUM = 6
-    AREA_SIZE_x = 10.0
-    AREA_SIZE_y = 10.0
-    AREA_LEFT = -5.0
-    AREA_BOTTOM = -5.0
-    GUI = True
+    ROBOTS_NUM = 4
+    ROBOT_RANGE = 4.0
+    AREA_SIZE_x = 3.0
+    AREA_SIZE_y = 3.0
+    AREA_LEFT = -1.0
+    AREA_BOTTOM = -1.0
+    GUI = False
+    SIM = False
 
     launch_list = []
 
@@ -34,7 +36,14 @@ def generate_launch_description():
         package='gmm_coverage',
         node_executable='centralized_gmm',
         name='centralized_gmm',
-        parameters=[{"ROBOTS_NUM": ROBOTS_NUM}, {"GRAPHICS_ON": GUI}],
+        parameters=[{"ROBOTS_NUM": ROBOTS_NUM},
+                    {"ROBOT_RANGE": ROBOT_RANGE},
+                    {"GRAPHICS_ON": GUI},
+                    {"SIM": SIM},
+                    {"AREA_SIZE_x": AREA_SIZE_x},
+                    {"AREA_SIZE_y": AREA_SIZE_y},
+                    {"AREA_LEFT": AREA_LEFT},
+                    {"AREA_BOTTOM": AREA_BOTTOM}],
         output='screen')
 
     launch_list.append(n)

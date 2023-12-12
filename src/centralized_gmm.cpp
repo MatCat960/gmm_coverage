@@ -126,6 +126,7 @@ public:
         {
             for (int i = 0; i < ROBOTS_NUM; i++)
             {
+                std::cout << "SONO IN REALTA" << std::endl;
                 velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtle" + std::to_string(i) + "/cmd_vel", 1));
                 poseSub_.push_back(this->create_subscription<geometry_msgs::msg::PoseStamped>("/vrpn_client_node/turtle" + std::to_string(i) + "/pose", 100, [this, i](geometry_msgs::msg::PoseStamped::SharedPtr msg) {this->poseCallback(msg,i);}));        
             }
@@ -316,6 +317,7 @@ void Controller::gmm_callback(const turtlebot3_msgs::msg::GMM::SharedPtr msg)
     this->gmm_msg.gaussians = msg->gaussians;
     this->gmm_msg.weights = msg->weights;
     this->got_gmm = true;
+    std::cout << "GMM RECEIVED \n";
     // RCLCPP_INFO_STREAM(this->get_logger(), "Sto ricevendo il GMM");
 }
 

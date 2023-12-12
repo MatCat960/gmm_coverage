@@ -61,11 +61,11 @@ public:
     Supervisor() : Node("gmm_supervisor")
     {
         // MODE: 0 = Default, 1 = FROM FILE
-        this->declare_parameter<int>("MODE", 0);
+        this->declare_parameter<int>("MODE", 1);
         this->get_parameter("MODE", MODE);
                     int column = 1;
 
-        this->declare_parameter<std::string>("FILE_PATH", "src/turtlebot3_msgs/src/coverage_distributed/gmm_matrix.txt");
+        this->declare_parameter<std::string>("FILE_PATH", "/home/mattia/arscontrol_turtlebot/src/gmm_coverage/gmm_matrix.txt");
         this->get_parameter("FILE_PATH", FILE_PATH);
 
         // --------------------------------------------------------- GMM ROS publisher -------------------------------------------------------
@@ -119,7 +119,7 @@ public:
                         if (v[0] != 0)
                         {
                             mean.push_back(v[0]);
-                            mean.push_back(v[1]);
+                            mean.push_back(-v[1]);
                             row.push_back(v[2]);
                             row.push_back(v[3]);
                             MEANs.push_back(mean);

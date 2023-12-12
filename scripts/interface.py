@@ -14,9 +14,9 @@ from geometry_msgs.msg import Point
 from ament_index_python.packages import get_package_prefix
 
 
-AREA_X = 10.0
-AREA_Y = 10.0
-COMPONENTS_NUM = 6
+AREA_X = 3.0
+AREA_Y = 3.0
+COMPONENTS_NUM = 4
 
 # function to check if point is inside polygon
 def isInside(x, y, xp, yp):

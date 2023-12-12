@@ -18,12 +18,12 @@ from ament_index_python.packages import get_package_prefix
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-    ROBOTS_NUM = 8
+    ROBOTS_NUM = 3
     AREA_SIZE_x = 10.0
     AREA_SIZE_y = 10.0
     AREA_LEFT = -5.0
     AREA_BOTTOM = -5.0
-    SIM = True
+    SIM = False
     GUI = True
 
     ld = []

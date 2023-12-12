@@ -65,13 +65,13 @@ public:
     {
         // --------------------------------------------------------- ROS parameters ----------------------------------------------------------
         // Area parameters
-        this->declare_parameter<double>("AREA_SIZE_x", 10);
+        this->declare_parameter<double>("AREA_SIZE_x", 3.0);
         this->get_parameter("AREA_SIZE_x", AREA_SIZE_x);
-        this->declare_parameter<double>("AREA_SIZE_y", 10);
+        this->declare_parameter<double>("AREA_SIZE_y", 3.0);
         this->get_parameter("AREA_SIZE_y", AREA_SIZE_y);
-        this->declare_parameter<double>("AREA_LEFT", -5);
+        this->declare_parameter<double>("AREA_LEFT", -1.5);
         this->get_parameter("AREA_LEFT", AREA_LEFT);
-        this->declare_parameter<double>("AREA_BOTTOM", -5);
+        this->declare_parameter<double>("AREA_BOTTOM", -1.5);
         this->get_parameter("AREA_BOTTOM", AREA_BOTTOM);
 
         this->declare_parameter<int>("CLUSTERS_NUM", 4);

@@ -181,7 +181,7 @@ void Visualizer::show()
             theta = atan2((lambda1-a), b);
         visualization_msgs::msg::Marker m;
         m.id = i;
-        m.header.frame_id = "odom";
+        m.header.frame_id = "world";
         m.type = SHAPE;
         m.action = visualization_msgs::msg::Marker::ADD;
         m.pose.position.x = this->gmm_msg.gaussians[i].mean_point.x;
