@@ -18,11 +18,12 @@ This repository contains C++ and Python code to define and handle Gaussian Mixtu
 ### How to use ###
 
 * Download the package and compile it.
-* Launch the node with:
-`ros2 run coverage_unimore_nyu coverage_uav` this will use the parameters inside the node
-or 
-`ros2 launch coverage_unimore_nyu launch_coverage.launch.py` this will use the parameters set in the launch file
+* Launch the graphical interface to draw the polygon:
+`ros2 run gmm_coverage hs_interface`
 
+* Launch the controller node:
+`ros2 launch gmm_coverage centralized_gmm.launch.py` or
+`ros2 launch gmm_coverage distributed_gmm.launch.py`
 
 ### Area size, Area left, Area bottom parameters ###
 
