@@ -26,7 +26,6 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(turtlebot3_msgs REQUIRED)
 find_package(gmm_msgs REQUIRED)
-# find_package(GaussianMixtureModel REQUIRED)
 find_package(gaussian_mixture_model REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
@@ -41,7 +40,7 @@ add_library(${PROJECT_NAME}_lib
   "src/centralized_gmm.cpp"
   "src/gmm_visualizer.cpp"
   "src/gmm_test_node.cpp"
-  # "src/hs_interface.cpp"
+  "src/hs_interface.cpp"
 )
 
 
@@ -55,7 +54,6 @@ set(dependencies
   "sensor_msgs"
   "turtlebot3_msgs"
   "visualization_msgs"
-  # "GaussianMixtureModel"
   "gaussian_mixture_model"
   "gmm_msgs"
 )
@@ -69,9 +67,9 @@ set(dependencies
 target_link_libraries(${PROJECT_NAME}_lib)
 ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
 
-# add_executable(hs_interface src/hs_interface.cpp )
-# target_link_libraries(hs_interface ${SFML_libraries})
-# ament_target_dependencies(hs_interface ${dependencies})
+add_executable(hs_interface src/hs_interface.cpp )
+target_link_libraries(hs_interface ${SFML_libraries})
+ament_target_dependencies(hs_interface ${dependencies})
 
 add_executable(centralized_gmm src/centralized_gmm.cpp )
 target_link_libraries(centralized_gmm ${SFML_libraries})
@@ -104,7 +102,7 @@ install(PROGRAMS
   )
 
   
-install(TARGETS centralized_gmm distributed_gmm gmm_visualizer supervisor_gmm gmm_test
+install(TARGETS centralized_gmm distributed_gmm gmm_visualizer supervisor_gmm gmm_test hs_interface
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -141,7 +139,6 @@ ament_export_dependencies(turtlebot3_msgs)
 ament_export_dependencies(gmm_msgs)
 ament_export_dependencies(visualization_msgs)
 ament_export_dependencies(gaussian_mixture_model)
-# ament_export_dependencies(GaussianMixtureModel)
 ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()

@@ -45,9 +45,11 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include "turtlebot3_msgs/msg/gaussian.hpp"
 #include "turtlebot3_msgs/msg/gmm.hpp"
-#include <GaussianMixtureModel/GaussianMixtureModel.h>
-#include <GaussianMixtureModel/ExpectationMaximization.h>
-#include <GaussianMixtureModel/TrainSet.h>
+// #include <GaussianMixtureModel/GaussianMixtureModel.h>
+// #include <GaussianMixtureModel/ExpectationMaximization.h>
+// #include <GaussianMixtureModel/TrainSet.h>
+
+#include "gaussian_mixture_model/gaussian_mixture_model.h"
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -61,7 +63,7 @@ class Interface : public rclcpp::Node
 {
 
 public:
-    Interface() : Node("human_swarm_interface")
+    Interface() : Node("human_swarm_interface"), gmm(4)
     {
         // --------------------------------------------------------- ROS parameters ----------------------------------------------------------
         // Area parameters
@@ -76,6 +78,8 @@ public:
 
         this->declare_parameter<int>("CLUSTERS_NUM", 4);
         this->get_parameter("CLUSTERS_NUM", CLUSTERS_NUM);
+        this->declare_parameter<int>("PARTICLES_NUM", 200);
+        this->get_parameter("PARTICLES_NUM", PARTICLES_NUM);
         
         // --------------------------------------------------------- GMM ROS publisher -------------------------------------------------------
         publisher = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1);
@@ -89,37 +93,48 @@ public:
         
         
         drawPolygon();                                                                  // draw ROI and save vertices
-        std::vector<Eigen::VectorXd> samples = generateSamples(2000);                   // generate desired number of samples inside ROI              
-        gauss::TrainSet samples_set(samples);                                           // create train set from samples
-        std::vector<gauss::gmm::Cluster> clusters = gauss::gmm::ExpectationMaximization(samples_set, CLUSTERS_NUM); // run EM algorithm to get GMM
-        gauss::gmm::GaussianMixtureModel gmm_(clusters);                               // create GMM from clusters
+        samples.resize(2, PARTICLES_NUM);
+        samples = generateSamples(PARTICLES_NUM);                   // generate desired number of samples inside ROI              
+        std::cout << "Samples generated with shape : " << samples.size() << "\n";
+        gmm.fitgmm(samples, CLUSTERS_NUM, 1000, 1e-3, false);                  // fit GMM to samples
+        std::cout << "Fitting completed...\n";
+        mean_points = gmm.getMeans();
+        covariances = gmm.getCovariances();
+        weights = gmm.getWeights();
         std::cout << "GMM initialized\n";
-        for (int i=0; i<gmm_.getClusters().size(); i++)
+        for(int i = 0; i < mean_points.size(); i++)
         {
-            std::cout << "Cluster " << i << ": weight = " << gmm_.getClusters()[i].weight << std::endl;
-            std::cout << "Mean: " << gmm_.getClusters()[i].distribution->getMean().transpose() << std::endl;
-            std::cout << "Covariance matrix: \n" << gmm_.getClusters()[i].distribution->getCovariance().transpose() << std::endl;
+            std::cout << mean_points[i] << std::endl;
         }
 
-        // Create GMM ROS msg
-        for (int i=0; i<gmm_.getClusters().size(); i++)
+        std::cout << "Covariances: " << std::endl;
+        for(int i = 0; i < covariances.size(); i++)
         {
-            turtlebot3_msgs::msg::Gaussian gaussian_msg;
-            geometry_msgs::msg::Point mean_pt;
-
-            mean_pt.x = gmm_.getClusters()[i].distribution->getMean()[0];
-            mean_pt.y = gmm_.getClusters()[i].distribution->getMean()[1];
-            mean_pt.z = 0.0;
-            gaussian_msg.mean_point = mean_pt;
-            for (int j=0; j<gmm_.getClusters()[i].distribution->getCovariance().rows(); j++)
-            {
-                gaussian_msg.covariance.push_back(gmm_.getClusters()[i].distribution->getCovariance()(j,0));
-                gaussian_msg.covariance.push_back(gmm_.getClusters()[i].distribution->getCovariance()(j,1));
-            }
-
-            gmm_msg.gaussians.push_back(gaussian_msg);
-            gmm_msg.weights.push_back(gmm_.getClusters()[i].weight);
+            std::cout << covariances[i] << std::endl;
         }
+
+        std::cout << "Weights: " << std::endl;
+        for(int i = 0; i < weights.size(); i++)
+        {
+            std::cout << weights[i] << std::endl;
+        }
+
+        // Create ROS msg
+        gmm_msg.weights = weights;
+
+        for(int i = 0; i < mean_points.size(); i++)
+        {
+            turtlebot3_msgs::msg::Gaussian gaussian;
+            gaussian.mean_point.x = mean_points[i](0);
+            gaussian.mean_point.y = mean_points[i](1);
+            gaussian.covariance.push_back(covariances[i](0,0));
+            gaussian.covariance.push_back(covariances[i](0,1));
+            gaussian.covariance.push_back(covariances[i](1,0));
+            gaussian.covariance.push_back(covariances[i](1,1));
+            gmm_msg.gaussians.push_back(gaussian);
+        }
+
+        std::cout << "ROS MSG Initialized" << std::endl;
 
     }
     ~Interface()
@@ -130,7 +145,8 @@ public:
 
 
     void drawPolygon();
-    std::vector<Eigen::VectorXd> generateSamples(int n_samples);
+    // void generateSamples(Eigen::MatrixXd& samples_matrix, int n_samples);
+    Eigen::MatrixXd generateSamples(int n_samples);
     bool insideROI(Eigen::VectorXd q, std::vector<Eigen::VectorXd> verts);
 
 
@@ -142,7 +158,11 @@ private:
     double AREA_LEFT;
     double AREA_BOTTOM;
     //-----------------------------------------------------------------------------------
-
+    GaussianMixtureModel gmm;
+    std::vector<Eigen::MatrixXd> covariances;
+    std::vector<Eigen::VectorXd> mean_points;
+    std::vector<double> weights;
+    Eigen::MatrixXd samples;
     //------------------------- Publishers and subscribers ------------------------------
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr publisher;
@@ -160,6 +180,7 @@ private:
 
     std::vector<Eigen::VectorXd> vertices;
     int CLUSTERS_NUM;
+    int PARTICLES_NUM;
 
 
     void timer_callback()
@@ -230,12 +251,13 @@ bool Interface::insideROI(Eigen::VectorXd q, std::vector<Eigen::VectorXd> verts)
     return c;
 }
 
-std::vector<Eigen::VectorXd> Interface::generateSamples(int n_samples)
+Eigen::MatrixXd Interface::generateSamples(int n_samples)
 {
     std::vector<Eigen::VectorXd> samples;
 
     // Get min and max values of x and y
-    double x_min, x_max, y_min, y_max = -100;
+    double x_min, y_min = 100;
+    double x_max, y_max = -100;
     for (int i=0; i<this->vertices.size(); i++)
     {
         double x = this->vertices[i](0);
@@ -275,7 +297,7 @@ std::vector<Eigen::VectorXd> Interface::generateSamples(int n_samples)
     this->app_gui->drawParticles(displayMatrix);
     this->app_gui->display();
 
-    return samples;
+    return displayMatrix;
 }
 
 
