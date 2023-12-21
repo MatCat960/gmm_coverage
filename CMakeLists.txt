@@ -41,6 +41,7 @@ add_library(${PROJECT_NAME}_lib
   "src/gmm_visualizer.cpp"
   "src/gmm_test_node.cpp"
   "src/hs_interface.cpp"
+  "src/target_publisher_node.cpp"
 )
 
 
@@ -91,6 +92,9 @@ add_executable(gmm_test src/gmm_test_node.cpp )
 # target_link_libraries(gmm_test ${SFML_libraries})
 ament_target_dependencies(gmm_test ${dependencies})
 
+add_executable(target_publisher_node src/target_publisher_node.cpp )
+ament_target_dependencies(target_publisher_node ${dependencies})
+
 
 # Install python modules
 ament_python_install_package(${PROJECT_NAME})
@@ -102,7 +106,7 @@ install(PROGRAMS
   )
 
   
-install(TARGETS centralized_gmm distributed_gmm gmm_visualizer supervisor_gmm gmm_test hs_interface
+install(TARGETS centralized_gmm distributed_gmm gmm_visualizer supervisor_gmm gmm_test hs_interface target_publisher_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
