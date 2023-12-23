@@ -53,7 +53,7 @@ public:
 
         //--------------------------------------------------- Subscribers and Publishers ----------------------------------------------------
         pub_ = this->create_publisher<geometry_msgs::msg::Pose>("/target" + std::to_string(ID) + "/pose", 1);
-        timer_ = this->create_wall_timer(100ms, std::bind(&Target::loop, this));
+        timer_ = this->create_wall_timer(10ms, std::bind(&Target::loop, this));
 
         msg.position.x = XT;
         msg.position.y = YT;

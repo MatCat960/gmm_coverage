@@ -468,6 +468,17 @@ public:
         }
     }
 
+    void drawParticles(std::vector<Eigen::VectorXd> particles)
+    {
+        for (int i=0; i<particles.size(); i++)
+        {
+            sf::CircleShape circle(0.5*POINT_RADIUS);
+            circle.setFillColor(sf::Color(255,255,102));
+            circle.setPosition(particles[i](0) - 0.5*POINT_RADIUS, AREA_SIZE_y - particles[i](1) - 0.5*POINT_RADIUS);
+            this->window->draw(circle);
+        }
+    }
+
     // Function to draw a polygon with mouse input
     // Returns drawn point and a boolean indicating if the user has finished drawing
     std::pair<Eigen::VectorXd,bool> drawROI()
