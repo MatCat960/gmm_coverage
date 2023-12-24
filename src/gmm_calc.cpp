@@ -31,6 +31,7 @@
 // ROS includes
 #include "rclcpp/rclcpp.hpp"
 #include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/point.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include "turtlebot3_msgs/msg/gaussian.hpp"
 #include "turtlebot3_msgs/msg/gmm.hpp"
@@ -53,6 +54,8 @@ public:
         //------------------------------------------------- ROS parameters ---------------------------------------------------------
         this->declare_parameter<int>("ID", 0);
         this->get_parameter("ID", ID);
+        this->declare_parameter<int>("ROBOTS_NUM", 8);
+        this->get_parameter("ROBOTS_NUM", ROBOTS_NUM);
         this->declare_parameter<int>("NUM_SAMPLES", 500);
         this->get_parameter("NUM_SAMPLES", NUM_SAMPLES);
         this->declare_parameter<int>("TARGETS_NUM", 2);
@@ -68,12 +71,27 @@ public:
         //-----------------------------------------------------------------------------------------------------------------------------------
 
         //------------------------------------------------- ROS publishers and subscribers -------------------------------------------------
-        gmm_pub_ = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model"+std::to_string(ID), 10);
+        gmm_pub_ = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model_"+std::to_string(ID), 10);
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("turtlebot" + std::to_string(ID) + "/odom", 1, std::bind(&Supervisor::odomCallback, this, _1));
         for (int i = 0; i < TARGETS_NUM; i++)
         {
             target_subs_.push_back(this->create_subscription<geometry_msgs::msg::Pose>("target" + std::to_string(i) + "/pose", 1, [this, i](geometry_msgs::msg::Pose::SharedPtr msg) {this->targetCallback(msg,i);}));
         }
+        for (int i = 0; i < ROBOTS_NUM; i++)
+        {
+            if (i != ID)
+            {
+                neighbor_subs_.push_back(this->create_subscription<nav_msgs::msg::Odometry>("turtlebot" + std::to_string(i) + "/odom", 1, [this, i](nav_msgs::msg::Odometry::SharedPtr msg) {this->neighCallback(msg,i);}));
+            }
+        }
+        for (int i = 0; i < ROBOTS_NUM; i++)
+        {
+            if (i != ID)
+            {
+                communication_subs_.push_back(this->create_subscription<geometry_msgs::msg::Point>("robot" + std::to_string(i) + "/communication_topic", 1, [this, i](geometry_msgs::msg::Point::SharedPtr msg) {this->communicationCallback(msg,i);}));
+            }
+        }
+        communication_pub_ = this->create_publisher<geometry_msgs::msg::Point>("robot" + std::to_string(ID) + "/communication_topic", 1);
         timer_ = this->create_wall_timer(2000ms, std::bind(&Supervisor::loop, this));
 
         // ------------------------------------------------- Initialize GMM and samples -----------------------------------------------------
@@ -102,6 +120,10 @@ public:
         pose.resize(2);
         pose << 0.0, 0.0;
 
+        // Neighbors poses
+        p_j.resize(2, ROBOTS_NUM);
+        p_j.setZero();
+
         //----------------------------------------------- Graphics window -----------------------------------------------
         if (GRAPHICS_ON)
         {
@@ -124,11 +146,14 @@ public:
     void loop();
     void targetCallback(const geometry_msgs::msg::Pose::SharedPtr msg, int i);
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+    void neighCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int i);
+    void communicationCallback(const geometry_msgs::msg::Point::SharedPtr msg, int i);
     Eigen::VectorXd addNoise(Eigen::VectorXd point);
 
 private:
     int ID;
     int NUM_SAMPLES;
+    int ROBOTS_NUM;
     int TARGETS_NUM;
     double COMM_RANGE;
     double SENS_RANGE;
@@ -137,13 +162,16 @@ private:
     GaussianMixtureModel gmm;
     std::vector<Eigen::VectorXd> samples;
     Eigen::VectorXd pose;
+    Eigen::MatrixXd p_j;
     std::vector<Eigen::VectorXd> targets_real;
 
     rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr gmm_pub_;
     std::vector<rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr> target_subs_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+    std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> neighbor_subs_;
+    rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr communication_pub_;
+    std::vector<rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr> communication_subs_;
     rclcpp::TimerBase::SharedPtr timer_;
-    turtlebot3_msgs::msg::GMM gmm_msg;
 
     //Rendering with SFML
     //------------------------------ graphics window -------------------------------------
@@ -170,12 +198,39 @@ void Supervisor::targetCallback(const geometry_msgs::msg::Pose::SharedPtr msg, i
         // Remove oldest sample and add the new one
         samples.erase(samples.begin());
         samples.push_back(noisy_point);
+
+        // Communicate detected point to neighbors
+        geometry_msgs::msg::Point comm_msg;
+        comm_msg.x = noisy_point(0);
+        comm_msg.y = noisy_point(1);
+        this->communication_pub_->publish(comm_msg);
     }
 }
 
 void Supervisor::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
     pose << msg->pose.pose.position.x, msg->pose.pose.position.y;
+}
+
+void Supervisor::neighCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int i)
+{
+    p_j(0, i) = msg->pose.pose.position.x;
+    p_j(1, i) = msg->pose.pose.position.y;
+}
+
+void Supervisor::communicationCallback(const geometry_msgs::msg::Point::SharedPtr msg, int i)
+{
+    Eigen::VectorXd point(2);
+    point << msg->x, msg->y;
+
+    // Add to the list only if inside communication range
+    double d = (p_j.col(i) - pose).norm();
+    if (d < COMM_RANGE)
+    {
+        // Remove oldest sample and add the new one
+        samples.erase(samples.begin());
+        samples.push_back(point);
+    }
 }
 
 Eigen::VectorXd Supervisor::addNoise(Eigen::VectorXd point)
@@ -196,22 +251,6 @@ Eigen::VectorXd Supervisor::addNoise(Eigen::VectorXd point)
 
 void Supervisor::loop()
 {
-    if ((GRAPHICS_ON) && (this->app_gui->isOpen()))
-    {
-        this->app_gui->clear();
-        this->app_gui->drawGlobalReference(sf::Color(255,255,0), sf::Color(255,255,255));
-        this->app_gui->drawPoint(pose);                         // draw robot
-        this->app_gui->drawParticles(samples);                  // draw particles
-
-        // Draw targets (only for visualization)
-        for (int i = 0; i < TARGETS_NUM; i++)
-        {
-            this->app_gui->drawPoint(this->targets_real[i], sf::Color(0, 0, 255));          // draw real targets
-        }
-
-        //Display window
-        this->app_gui->display();
-    }
     auto timerstart = std::chrono::high_resolution_clock::now();
     gmm.fitgmm(samples, 2, 1000, 1e-3, false);
     auto end = std::chrono::high_resolution_clock::now();
@@ -239,8 +278,9 @@ void Supervisor::loop()
     //     std::cout << weights[i] << std::endl;
     // }
 
-    // Create ROS msg
-    this->gmm_msg.weights = weights;
+    // Create ROS GMM msg
+    turtlebot3_msgs::msg::GMM gmm_msg;
+    gmm_msg.weights = weights;
 
     for(int i = 0; i < mean_points.size(); i++)
     {
@@ -251,10 +291,27 @@ void Supervisor::loop()
         gaussian.covariance.push_back(covariances[i](0,1));
         gaussian.covariance.push_back(covariances[i](1,0));
         gaussian.covariance.push_back(covariances[i](1,1));
-        this->gmm_msg.gaussians.push_back(gaussian);
+        gmm_msg.gaussians.push_back(gaussian);
     }
 
-    this->gmm_pub_->publish(this->gmm_msg);
+    this->gmm_pub_->publish(gmm_msg);
+
+    if ((GRAPHICS_ON) && (this->app_gui->isOpen()))
+    {
+        this->app_gui->clear();
+        this->app_gui->drawGlobalReference(sf::Color(255,255,0), sf::Color(255,255,255));
+        this->app_gui->drawPoint(pose);                         // draw robot
+        this->app_gui->drawParticles(samples);                  // draw particles
+
+        // Draw targets (only for visualization)
+        for (int i = 0; i < TARGETS_NUM; i++)
+        {
+            this->app_gui->drawPoint(this->targets_real[i], sf::Color(0, 0, 255));          // draw real targets
+        }
+
+        //Display window
+        this->app_gui->display();
+    }
 }
 
 

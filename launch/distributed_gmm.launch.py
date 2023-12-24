@@ -18,20 +18,22 @@ from ament_index_python.packages import get_package_prefix
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-    ROBOTS_NUM = 3
-    AREA_SIZE_x = 10.0
-    AREA_SIZE_y = 10.0
-    AREA_LEFT = -5.0
-    AREA_BOTTOM = -5.0
-    SIM = False
-    GUI = True
+    ROBOTS_NUM = 8
+    ROBOT_RANGE = 7.0
+    AREA_SIZE_x = 20.0
+    AREA_SIZE_y = 20.0
+    AREA_LEFT = -10.0
+    AREA_BOTTOM = -10.0
+    SIM = True
+    GUI = False
 
     ld = []
     for i in range(0,ROBOTS_NUM):
         n = Node(
             package='gmm_coverage',
             node_executable='distributed_gmm',
-            parameters=[{"ROBOTS_NUM": ROBOTS_NUM}, {"AREA_SIZE_x": AREA_SIZE_x}, {"AREA_SIZE_y": AREA_SIZE_y}, {"AREA_LEFT": AREA_LEFT}, {"AREA_BOTTOM": AREA_BOTTOM}, {"SIM": SIM}, {"ID": i}, {"GUI": GUI}],
+            remappings=[('/gaussian_mixture_model', '/gaussian_mixture_model_'+str(i))],
+            parameters=[{"ROBOTS_NUM": ROBOTS_NUM}, {"ROBOT_RANGE": ROBOT_RANGE}, {"AREA_SIZE_x": AREA_SIZE_x}, {"AREA_SIZE_y": AREA_SIZE_y}, {"AREA_LEFT": AREA_LEFT}, {"AREA_BOTTOM": AREA_BOTTOM}, {"SIM": SIM}, {"ID": i}, {"GUI": GUI}],
             output='screen')
 
         ld.append(n)

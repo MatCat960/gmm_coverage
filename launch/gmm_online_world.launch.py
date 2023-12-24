@@ -16,7 +16,7 @@ TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
 AREA_W = 10.0
 ROBOTS_NUM = 8
-TARGETS_NUM = 2
+TARGETS_NUM = 4
 
 
 def generate_launch_description():

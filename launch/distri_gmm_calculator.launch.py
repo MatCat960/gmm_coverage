@@ -22,31 +22,33 @@ TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
     ID = 0
+    ROBOTS_NUM = 8
     NUM_SAMPLES = 500
-    TARGETS_NUM = 2
+    TARGETS_NUM = 4
     SENS_RANGE = 5.0
-    COMM_RANGE = 5.0
+    COMM_RANGE = 7.0
     ENV_SIZE = 20.0
     GRAPHICS_ON = True
 
-    GUI = True
+    GUI = False
 
     launch_list = []
 
-    n = Node(
-        package='gmm_coverage',
-        node_executable='gmm_calc',
-        name='gmm_calculator',
-        parameters=[{"ID": ID},
-                    {"NUM_SAMPLES": NUM_SAMPLES},
-                    {"TARGETS_NUM": TARGETS_NUM},
-                    {"SENS_RANGE": SENS_RANGE},
-                    {"COMM_RANGE": COMM_RANGE},
-                    {"ENV_SIZE": ENV_SIZE},
-                    {"GRAPHICS_ON": GRAPHICS_ON}],
-        output='screen')
+    for i in range(ROBOTS_NUM):
+        n = Node(
+            package='gmm_coverage',
+            node_executable='gmm_calc',
+            name='gmm_calculator',
+            parameters=[{"ID": i},
+                        {"NUM_SAMPLES": NUM_SAMPLES},
+                        {"TARGETS_NUM": TARGETS_NUM},
+                        {"SENS_RANGE": SENS_RANGE},
+                        {"COMM_RANGE": COMM_RANGE},
+                        {"ENV_SIZE": ENV_SIZE},
+                        {"GRAPHICS_ON": GRAPHICS_ON}],
+            output='screen')
 
-    launch_list.append(n)
+        launch_list.append(n)
 
     if GUI:
         pkg_path = get_package_prefix('gmm_coverage')
