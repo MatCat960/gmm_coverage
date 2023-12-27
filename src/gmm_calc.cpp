@@ -64,6 +64,8 @@ public:
         this->get_parameter("SENS_RANGE", SENS_RANGE);
         this->declare_parameter<double>("COMM_RANGE", 5.0);
         this->get_parameter("COMM_RANGE", COMM_RANGE);
+        this->declare_parameter<double>("NOISE_STD", 1.0);
+        this->get_parameter("NOISE_STD", NOISE_STD);
         this->declare_parameter<double>("ENV_SIZE", 20.0);
         this->get_parameter("ENV_SIZE", ENV_SIZE);
         this->declare_parameter<bool>("GRAPHICS_ON", true);
@@ -157,6 +159,7 @@ private:
     int TARGETS_NUM;
     double COMM_RANGE;
     double SENS_RANGE;
+    double NOISE_STD;
     double ENV_SIZE;
     bool GRAPHICS_ON;
     GaussianMixtureModel gmm;
@@ -238,9 +241,8 @@ Eigen::VectorXd Supervisor::addNoise(Eigen::VectorXd point)
     // Generate random inputs
     std::random_device rd;
     std::mt19937 gen(rd());
-    double dev = 1.0;
-    std::normal_distribution<double> dist_x(point(0), dev);
-    std::normal_distribution<double> dist_y(point(1), dev);
+    std::normal_distribution<double> dist_x(point(0), NOISE_STD);
+    std::normal_distribution<double> dist_y(point(1), NOISE_STD);
 
     Eigen::VectorXd noisy_point(2);
     noisy_point << dist_x(gen), dist_y(gen);

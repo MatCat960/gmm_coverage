@@ -27,8 +27,9 @@ def generate_launch_description():
     TARGETS_NUM = 4
     SENS_RANGE = 5.0
     COMM_RANGE = 7.0
+    NOISE_DEV = 0.5
     ENV_SIZE = 20.0
-    GRAPHICS_ON = True
+    GRAPHICS_ON = False
 
     GUI = False
 
@@ -44,6 +45,7 @@ def generate_launch_description():
                         {"TARGETS_NUM": TARGETS_NUM},
                         {"SENS_RANGE": SENS_RANGE},
                         {"COMM_RANGE": COMM_RANGE},
+                        {"NOISE_DEV": NOISE_DEV},
                         {"ENV_SIZE": ENV_SIZE},
                         {"GRAPHICS_ON": GRAPHICS_ON}],
             output='screen')

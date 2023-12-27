@@ -62,7 +62,7 @@ const double b = 0.025;                 //for differential drive control (only i
 //------------------------------------------------------------------------
 const float CONVERGENCE_TOLERANCE = 0.1;
 //------------------------------------------------------------------------
-const int shutdown_timer = 10;           //count how many seconds to let the robots stopped before shutting down the node
+const int shutdown_timer = 30;           //count how many seconds to let the robots stopped before shutting down the node
 
 
 bool IsPathExist(const std::string &s)
