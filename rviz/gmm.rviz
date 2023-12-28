@@ -516,7 +516,7 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -671,7 +671,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: world
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -711,25 +711,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 13.117227554321289
+      Distance: 22.395313262939453
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.39492735266685486
-        Y: -1.1991099119186401
-        Z: 0.7388123273849487
+        X: -0.1150718554854393
+        Y: -0.9410849809646606
+        Z: 0.9114724397659302
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9997971653938293
+      Pitch: 0.6047975420951843
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.733598232269287
+      Yaw: 4.743598461151123
     Saved: ~
 Window Geometry:
   Displays:
@@ -745,5 +745,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1848
-  X: 1992
+  X: 72
   Y: 27

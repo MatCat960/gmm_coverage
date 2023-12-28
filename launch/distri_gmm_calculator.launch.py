@@ -22,14 +22,14 @@ TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
     ID = 0
-    ROBOTS_NUM = 8
-    NUM_SAMPLES = 500
+    ROBOTS_NUM = 5
+    NUM_SAMPLES = 300
     TARGETS_NUM = 4
     SENS_RANGE = 5.0
     COMM_RANGE = 7.0
     NOISE_DEV = 0.5
     ENV_SIZE = 20.0
-    GRAPHICS_ON = False
+    GRAPHICS_ON = True
 
     GUI = False
 
@@ -47,10 +47,14 @@ def generate_launch_description():
                         {"COMM_RANGE": COMM_RANGE},
                         {"NOISE_DEV": NOISE_DEV},
                         {"ENV_SIZE": ENV_SIZE},
+                        # {"GUI", GUI},
                         {"GRAPHICS_ON": GRAPHICS_ON}],
             output='screen')
+        
+        GRAPHICS_ON = False
 
         launch_list.append(n)
+
 
     if GUI:
         pkg_path = get_package_prefix('gmm_coverage')
@@ -70,6 +74,7 @@ def generate_launch_description():
             package='gmm_coverage',
             node_executable='gmm_visualizer',
             name='gmm_visualizer',
+            remappings=[('/gaussian_mixture_model', '/gaussian_mixture_model_0')],
             output='screen'
         )
         launch_list.append(gmm_visualizer)

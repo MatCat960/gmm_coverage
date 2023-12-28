@@ -15,7 +15,7 @@ from launch_ros.actions import Node
 TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
 
 AREA_W = 10.0
-ROBOTS_NUM = 8
+ROBOTS_NUM = 5
 TARGETS_NUM = 4
 
 
@@ -37,8 +37,8 @@ def generate_launch_description():
     theta = []
 
     for i in range(ROBOTS_NUM):
-        ranx = random.uniform(-0.5*AREA_W, 0.5*AREA_W)
-        rany = random.uniform(-0.5*AREA_W, 0.5*AREA_W)
+        ranx = random.uniform(-0.0*AREA_W, 0.5*AREA_W)
+        rany = random.uniform(-0.0*AREA_W, 0.5*AREA_W)
         th = random.uniform(0,6)
 
         x_pos.append(ranx)
@@ -61,8 +61,8 @@ def generate_launch_description():
     xtargets = []
     ytargets = []
     for i in range(TARGETS_NUM):
-        xt = random.uniform(-0.5*AREA_W, 0.5*AREA_W)
-        yt = random.uniform(-0.5*AREA_W, 0.5*AREA_W)
+        xt = random.uniform(-0.0*AREA_W, 0.5*AREA_W)
+        yt = random.uniform(-0.0*AREA_W, 0.5*AREA_W)
         xtargets.append(xt)
         ytargets.append(yt)
         target = Node(package='gazebo_ros', executable='spawn_entity.py',
@@ -77,7 +77,7 @@ def generate_launch_description():
         target_pub = Node(
             package='gmm_coverage',
             node_executable='target_publisher_node',
-            name='target_pub',
+            name='target_pub'+str(i),
             parameters=[{"XT": xtargets[i]},
                         {"YT": ytargets[i]},
                         {"ID": i}],

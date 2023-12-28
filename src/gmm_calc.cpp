@@ -35,6 +35,8 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include "turtlebot3_msgs/msg/gaussian.hpp"
 #include "turtlebot3_msgs/msg/gmm.hpp"
+#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 #include "gaussian_mixture_model/gaussian_mixture_model.h"
 
@@ -68,6 +70,8 @@ public:
         this->get_parameter("NOISE_STD", NOISE_STD);
         this->declare_parameter<double>("ENV_SIZE", 20.0);
         this->get_parameter("ENV_SIZE", ENV_SIZE);
+        this->declare_parameter<bool>("GUI", false);
+        this->get_parameter("GUI", GUI);
         this->declare_parameter<bool>("GRAPHICS_ON", true);
         this->get_parameter("GRAPHICS_ON", GRAPHICS_ON);
         //-----------------------------------------------------------------------------------------------------------------------------------
@@ -94,7 +98,7 @@ public:
             }
         }
         communication_pub_ = this->create_publisher<geometry_msgs::msg::Point>("robot" + std::to_string(ID) + "/communication_topic", 1);
-        timer_ = this->create_wall_timer(2000ms, std::bind(&Supervisor::loop, this));
+        timer_ = this->create_wall_timer(100ms, std::bind(&Supervisor::loop, this));
 
         // ------------------------------------------------- Initialize GMM and samples -----------------------------------------------------
         // Set up random number generator
@@ -132,6 +136,13 @@ public:
             app_gui.reset(new Graphics{ENV_SIZE, ENV_SIZE, -0.5*ENV_SIZE, -0.5*ENV_SIZE, 2.0});
         }
 
+        // ------------------------------------------ GUI Publisher ------------------------
+        if (GUI)
+        {
+            SHAPE = visualization_msgs::msg::Marker::SPHERE;
+            samples_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/gmm_"+std::to_string(ID)+"_samples", 1);
+        }
+
         
 
         
@@ -151,6 +162,7 @@ public:
     void neighCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int i);
     void communicationCallback(const geometry_msgs::msg::Point::SharedPtr msg, int i);
     Eigen::VectorXd addNoise(Eigen::VectorXd point);
+    void publishSamples();
 
 private:
     int ID;
@@ -161,6 +173,7 @@ private:
     double SENS_RANGE;
     double NOISE_STD;
     double ENV_SIZE;
+    bool GUI;
     bool GRAPHICS_ON;
     GaussianMixtureModel gmm;
     std::vector<Eigen::VectorXd> samples;
@@ -174,7 +187,11 @@ private:
     std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> neighbor_subs_;
     rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr communication_pub_;
     std::vector<rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr> communication_subs_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr samples_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
+
+    visualization_msgs::msg::MarkerArray marker_msg;
+    uint32_t SHAPE;
 
     //Rendering with SFML
     //------------------------------ graphics window -------------------------------------
@@ -236,6 +253,31 @@ void Supervisor::communicationCallback(const geometry_msgs::msg::Point::SharedPt
     }
 }
 
+void Supervisor::publishSamples()
+{
+    for (int i = 0; i < samples.size(); i++)
+    {
+        visualization_msgs::msg::Marker m;
+        m.id = i;
+        m.header.frame_id = "odom";
+        m.type = SHAPE;
+        m.action = visualization_msgs::msg::Marker::ADD;
+        m.pose.position.x = samples[i](0);
+        m.pose.position.y = samples[i](1);
+        m.pose.position.z = 0.0;
+        m.scale.x = 0.05;
+        m.scale.y = 0.05;
+        m.scale.z = 0.05;
+        m.color.r = 0.0f;
+        m.color.g = 1.0f;
+        m.color.b = 0.0f;
+        m.color.a = 0.5;           // alpha is given by its weight
+        this->marker_msg.markers.push_back(m);
+    }
+
+    this->samples_pub_->publish(this->marker_msg);
+}
+
 Eigen::VectorXd Supervisor::addNoise(Eigen::VectorXd point)
 {
     // Generate random inputs
@@ -250,6 +292,8 @@ Eigen::VectorXd Supervisor::addNoise(Eigen::VectorXd point)
     
     return noisy_point;
 }
+
+
 
 void Supervisor::loop()
 {
@@ -297,6 +341,11 @@ void Supervisor::loop()
     }
 
     this->gmm_pub_->publish(gmm_msg);
+
+    if (GUI)
+    {
+        publishSamples();
+    }
 
     if ((GRAPHICS_ON) && (this->app_gui->isOpen()))
     {

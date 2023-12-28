@@ -18,7 +18,7 @@ from ament_index_python.packages import get_package_prefix
 
 def generate_launch_description():
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-    ROBOTS_NUM = 8
+    ROBOTS_NUM = 5
     ROBOT_RANGE = 10.0
     AREA_SIZE_x = 20.0
     AREA_SIZE_y = 20.0
@@ -57,6 +57,7 @@ def generate_launch_description():
             package='gmm_coverage',
             node_executable='gmm_visualizer',
             name='gmm_visualizer',
+            remappings=[('/gaussian_mixture_model', '/gaussian_mixture_model_0')],
             output='screen'
         )
         ld.append(gmm_visualizer)
