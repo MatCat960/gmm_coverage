@@ -33,8 +33,8 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/point.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
@@ -77,7 +77,7 @@ public:
         //-----------------------------------------------------------------------------------------------------------------------------------
 
         //------------------------------------------------- ROS publishers and subscribers -------------------------------------------------
-        gmm_pub_ = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model_"+std::to_string(ID), 10);
+        gmm_pub_ = this->create_publisher<gmm_msgs::msg::GMM>("/gaussian_mixture_model_"+std::to_string(ID), 10);
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>("turtlebot" + std::to_string(ID) + "/odom", 1, std::bind(&Supervisor::odomCallback, this, _1));
         for (int i = 0; i < TARGETS_NUM; i++)
         {
@@ -181,7 +181,7 @@ private:
     Eigen::MatrixXd p_j;
     std::vector<Eigen::VectorXd> targets_real;
 
-    rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr gmm_pub_;
+    rclcpp::Publisher<gmm_msgs::msg::GMM>::SharedPtr gmm_pub_;
     std::vector<rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr> target_subs_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> neighbor_subs_;
@@ -325,12 +325,12 @@ void Supervisor::loop()
     // }
 
     // Create ROS GMM msg
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    gmm_msgs::msg::GMM gmm_msg;
     gmm_msg.weights = weights;
 
     for(int i = 0; i < mean_points.size(); i++)
     {
-        turtlebot3_msgs::msg::Gaussian gaussian;
+        gmm_msgs::msg::Gaussian gaussian;
         gaussian.mean_point.x = mean_points[i](0);
         gaussian.mean_point.y = mean_points[i](1);
         gaussian.covariance.push_back(covariances[i](0,0));

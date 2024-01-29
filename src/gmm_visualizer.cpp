@@ -45,8 +45,8 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -67,7 +67,7 @@ public:
         // --------------------------------------------------------- GMM ROS publishers and subscribers -------------------------------------------------------
         publisher = this->create_publisher<visualization_msgs::msg::MarkerArray>("/gmm_markers", 1);
         timer_ = this->create_wall_timer(1000ms, std::bind(&Visualizer::show, this));
-        gmmSub_ = this->create_subscription<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Visualizer::gmm_callback, this, _1));
+        gmmSub_ = this->create_subscription<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Visualizer::gmm_callback, this, _1));
 
     }
     ~Visualizer()
@@ -75,7 +75,7 @@ public:
         std::cout<<"DESTROYER HAS BEEN CALLED"<<std::endl;
     }
 
-    void gmm_callback(const turtlebot3_msgs::msg::GMM::SharedPtr msg);
+    void gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg);
     void GroundColorMix(double* color, double x, double min, double max);
     void show();
 
@@ -91,15 +91,15 @@ private:
     //------------------------- Publishers and subscribers ------------------------------
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher;
-    rclcpp::Subscription<turtlebot3_msgs::msg::GMM>::SharedPtr gmmSub_;
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    rclcpp::Subscription<gmm_msgs::msg::GMM>::SharedPtr gmmSub_;
+    gmm_msgs::msg::GMM gmm_msg;
     visualization_msgs::msg::MarkerArray markers_msg;
     std::vector<visualization_msgs::msg::Marker> markers_array;
     //-----------------------------------------------------------------------------------
 
 };
 
-void Visualizer::gmm_callback(const turtlebot3_msgs::msg::GMM::SharedPtr msg)
+void Visualizer::gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg)
 {
     this->gmm_msg.gaussians = msg->gaussians;
     this->gmm_msg.weights = msg->weights;

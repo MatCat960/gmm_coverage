@@ -26,8 +26,8 @@
 
 
 #include "rclcpp/rclcpp.hpp"
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 
 
 #include "gaussian_mixture_model/gaussian_mixture_model.h"
@@ -45,8 +45,8 @@ private:
 
     // ROS Related Variables
     rclcpp::TimerBase::SharedPtr timer_;
-    turtlebot3_msgs::msg::GMM gmm_msg;
-    rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr gmm_pub_;
+    gmm_msgs::msg::GMM gmm_msg;
+    rclcpp::Publisher<gmm_msgs::msg::GMM>::SharedPtr gmm_pub_;
 
 public:
 
@@ -57,7 +57,7 @@ public:
 
         // Initialize ROS variables
         timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&GMM_Test::timerCallback, this));
-        gmm_pub_ = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 10);
+        gmm_pub_ = this->create_publisher<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 10);
 
         samples.resize(2,200);
         double dev = 0.5;
@@ -150,7 +150,7 @@ public:
 
         for(int i = 0; i < mean_points.size(); i++)
         {
-            turtlebot3_msgs::msg::Gaussian gaussian;
+            gmm_msgs::msg::Gaussian gaussian;
             gaussian.mean_point.x = mean_points[i](0);
             gaussian.mean_point.y = mean_points[i](1);
             gaussian.covariance.push_back(covariances[i](0,0));

@@ -10,10 +10,10 @@
 #include "FortuneAlgorithm.h"
 #include "Utility.h"
 #include <iostream>
-// #include "/home/mattia/arscontrol_turtlebot/install/turtlebot3_msgs/include/turtlebot3_msgs/msg/gmm.hpp"
-// #include "/home/mattia/arscontrol_turtlebot/install/turtlebot3_msgs/include/turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
-#include "turtlebot3_msgs/msg/gaussian.hpp"
+// #include "/home/mattia/arscontrol_turtlebot/install/gmm_msgs/include/gmm_msgs/msg/gmm.hpp"
+// #include "/home/mattia/arscontrol_turtlebot/install/gmm_msgs/include/gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
 
 
 #define M_PI   3.14159265358979323846  /*pi*/
@@ -22,11 +22,11 @@
 
 float gauss3d_pdf(std::vector<float> mean, std::vector<std::vector<float>> var, std::vector<float> pt);
 float multiple_gauss3d_pdf(std::vector<std::vector<float>> means_pt, std::vector<std::vector<std::vector<float>>> vars, std::vector<float> pt, std::vector<float> weights);
-float gauss3d_pdf2(turtlebot3_msgs::msg::Gaussian gaussian, std::vector<float> pt);
-float multiple_gauss3d_pdf2(turtlebot3_msgs::msg::GMM gmm, std::vector<float> pt);
-float single_component_pdf(turtlebot3_msgs::msg::Gaussian gaussian, std::vector<float> pt);
-float mixture_pdf(turtlebot3_msgs::msg::GMM gmm, std::vector<float> pt);
-std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, turtlebot3_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes, float discretize_precision);
+float gauss3d_pdf2(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt);
+float multiple_gauss3d_pdf2(gmm_msgs::msg::GMM gmm, std::vector<float> pt);
+float single_component_pdf(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt);
+float mixture_pdf(gmm_msgs::msg::GMM gmm, std::vector<float> pt);
+std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gmm_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes, float discretize_precision);
 
 //***********************************************************************************************************************************
 //-------------------------------- FUNZIONI AUSILIARIE INIZIALI (trasformazione coordinate + sensing) ---------------------------------
@@ -1198,10 +1198,10 @@ std::vector<float> computeGMMPolygonCentroid(const Diagram<double> &polygon, std
 }
 
 // Funzione per il calcolo del centroide in caso di GMM definite con messaggio custom
-std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, turtlebot3_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes = {}, float discretize_precision = 1.0/10.0){
+std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gmm_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes = {}, float discretize_precision = 1.0/10.0){
     
     // Transform GMM to local coordinates
-    turtlebot3_msgs::msg::GMM gmm_local;
+    gmm_msgs::msg::GMM gmm_local;
     gmm_local.weights = gmm.weights;
     for (long unsigned int i = 0; i < gmm.gaussians.size(); ++i)
     {
@@ -1455,7 +1455,7 @@ float gauss3d_pdf(std::vector<float> mean, std::vector<std::vector<float>> var, 
     return prob;
 }
 
-float gauss3d_pdf2(turtlebot3_msgs::msg::Gaussian gaussian, std::vector<float> pt){
+float gauss3d_pdf2(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt){
     std::vector<float> mean = {};                                // mean vector (1D, 2D or 3D)
     std::vector<std::vector<float>> var = {};                    // covariance matrix
     std::vector<float> row = {};                                 // covariance matrix rows
@@ -1527,7 +1527,7 @@ float gauss3d_pdf2(turtlebot3_msgs::msg::Gaussian gaussian, std::vector<float> p
 }
 
 
-float single_component_pdf(turtlebot3_msgs::msg::Gaussian gaussian, std::vector<float> pt){
+float single_component_pdf(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt){
     // std::cout << "Entered single component pdf" << std::endl;
     Eigen::VectorXd mean_pt;
     Eigen::MatrixXd cov_matrix;
@@ -1602,7 +1602,7 @@ float single_component_pdf(turtlebot3_msgs::msg::Gaussian gaussian, std::vector<
 }
 
 
-float mixture_pdf(turtlebot3_msgs::msg::GMM gmm, std::vector<float> pt)
+float mixture_pdf(gmm_msgs::msg::GMM gmm, std::vector<float> pt)
 {
     // std::cout << "Entered multi-component pdf" << std::endl;
     float val = 0;
@@ -1685,7 +1685,7 @@ float multiple_gauss3d_pdf(std::vector<std::vector<float>> means_pt, std::vector
 }
 
 //funzione per calcolare il valore di un punto dato un Gaussian Mixture Model
-float multiple_gauss3d_pdf2(turtlebot3_msgs::msg::GMM gmm, std::vector<float> pt){
+float multiple_gauss3d_pdf2(gmm_msgs::msg::GMM gmm, std::vector<float> pt){
     float val = 0;
 
     // devo avere stesso numero di punti medi, varianze e pesi

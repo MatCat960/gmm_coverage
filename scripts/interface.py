@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 # ROS imports
 import rclpy
 from rclpy.node import Node
-from turtlebot3_msgs.msg import GMM, Gaussian
+from gmm_msgs.msg import GMM, Gaussian
 from geometry_msgs.msg import Point
 from ament_index_python.packages import get_package_prefix
 

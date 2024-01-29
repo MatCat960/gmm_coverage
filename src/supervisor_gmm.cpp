@@ -43,8 +43,8 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -69,7 +69,7 @@ public:
         this->get_parameter("FILE_PATH", FILE_PATH);
 
         // --------------------------------------------------------- GMM ROS publisher -------------------------------------------------------
-        publisher = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1);
+        publisher = this->create_publisher<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1);
         timer_ = this->create_wall_timer(100ms, std::bind(&Supervisor::timer_callback, this));
 
         //----------------------------------------------------------- init Variables ---------------------------------------------------------
@@ -154,10 +154,10 @@ public:
 
         
         // ------------------------------------------ Creazione messaggi custom Gaussiane --------------------------------------------
-        // turtlebot3_msgs::msg::GMM gmm_msg;
+        // gmm_msgs::msg::GMM gmm_msg;
         for (int i=0; i<MEANs.size(); i++)
         {
-            turtlebot3_msgs::msg::Gaussian gaussian_msg;
+            gmm_msgs::msg::Gaussian gaussian_msg;
             geometry_msgs::msg::Point mean_pt;
 
             mean_pt.x = MEANs[i][0];
@@ -190,8 +190,8 @@ private:
 
     //------------------------- Publishers and subscribers ------------------------------
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr publisher;
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    rclcpp::Publisher<gmm_msgs::msg::GMM>::SharedPtr publisher;
+    gmm_msgs::msg::GMM gmm_msg;
     //-----------------------------------------------------------------------------------
 
 

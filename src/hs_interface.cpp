@@ -43,8 +43,8 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "turtlebot3_msgs/msg/gaussian.hpp"
-#include "turtlebot3_msgs/msg/gmm.hpp"
+#include "gmm_msgs/msg/gaussian.hpp"
+#include "gmm_msgs/msg/gmm.hpp"
 // #include <GaussianMixtureModel/GaussianMixtureModel.h>
 // #include <GaussianMixtureModel/ExpectationMaximization.h>
 // #include <GaussianMixtureModel/TrainSet.h>
@@ -82,7 +82,7 @@ public:
         this->get_parameter("PARTICLES_NUM", PARTICLES_NUM);
         
         // --------------------------------------------------------- GMM ROS publisher -------------------------------------------------------
-        publisher = this->create_publisher<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1);
+        publisher = this->create_publisher<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1);
         timer_ = this->create_wall_timer(100ms, std::bind(&Interface::timer_callback, this));
 
         //----------------------------------------------------------- init Variables ---------------------------------------------------------
@@ -124,7 +124,7 @@ public:
 
         for(int i = 0; i < mean_points.size(); i++)
         {
-            turtlebot3_msgs::msg::Gaussian gaussian;
+            gmm_msgs::msg::Gaussian gaussian;
             gaussian.mean_point.x = mean_points[i](0);
             gaussian.mean_point.y = mean_points[i](1);
             gaussian.covariance.push_back(covariances[i](0,0));
@@ -165,8 +165,8 @@ private:
     Eigen::MatrixXd samples;
     //------------------------- Publishers and subscribers ------------------------------
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<turtlebot3_msgs::msg::GMM>::SharedPtr publisher;
-    turtlebot3_msgs::msg::GMM gmm_msg;
+    rclcpp::Publisher<gmm_msgs::msg::GMM>::SharedPtr publisher;
+    gmm_msgs::msg::GMM gmm_msg;
     //-----------------------------------------------------------------------------------
 
     // SFML GUI
