@@ -25,24 +25,18 @@ find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 # find_package(turtlebot3_msgs REQUIRED)
-find_package(gmm_msgs REQUIRED)
-find_package(gaussian_mixture_model REQUIRED)
+# find_package(gmm_msgs REQUIRED)
+# find_package(gaussian_mixture_model REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(SFML REQUIRED COMPONENTS graphics window system)
+find_package(arrc_interfaces REQUIRED)
+# find_package(SFML REQUIRED COMPONENTS graphics window system)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
 add_library(${PROJECT_NAME}_lib
  "src/distributed_gmm.cpp"
- "src/supervisor_gmm.cpp"
-  "src/centralized_gmm.cpp"
-  "src/gmm_visualizer.cpp"
-  "src/gmm_test_node.cpp"
-  "src/hs_interface.cpp"
-  "src/target_publisher_node.cpp"
-  "src/gmm_calc.cpp"
 )
 
 
@@ -54,10 +48,8 @@ set(dependencies
   "tf2"
   "tf2_ros"
   "sensor_msgs"
-  "turtlebot3_msgs"
   "visualization_msgs"
-  "gaussian_mixture_model"
-  "gmm_msgs"
+  "arrc_interfaces"
 )
 
   set(SFML_libraries
@@ -69,49 +61,49 @@ set(dependencies
 target_link_libraries(${PROJECT_NAME}_lib)
 ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
 
-add_executable(hs_interface src/hs_interface.cpp )
-target_link_libraries(hs_interface ${SFML_libraries})
-ament_target_dependencies(hs_interface ${dependencies})
+# add_executable(hs_interface src/hs_interface.cpp )
+# target_link_libraries(hs_interface ${SFML_libraries})
+# ament_target_dependencies(hs_interface ${dependencies})
 
-add_executable(centralized_gmm src/centralized_gmm.cpp )
-target_link_libraries(centralized_gmm ${SFML_libraries})
-ament_target_dependencies(centralized_gmm ${dependencies})
+# add_executable(centralized_gmm src/centralized_gmm.cpp )
+# target_link_libraries(centralized_gmm ${SFML_libraries})
+# ament_target_dependencies(centralized_gmm ${dependencies})
 
 add_executable(distributed_gmm src/distributed_gmm.cpp )
-target_link_libraries(distributed_gmm ${SFML_libraries})
+# target_link_libraries(distributed_gmm ${SFML_libraries})
 ament_target_dependencies(distributed_gmm ${dependencies})
 
-add_executable(gmm_visualizer src/gmm_visualizer.cpp )
-target_link_libraries(gmm_visualizer ${SFML_libraries})
-ament_target_dependencies(gmm_visualizer ${dependencies})
+# add_executable(gmm_visualizer src/gmm_visualizer.cpp )
+# target_link_libraries(gmm_visualizer ${SFML_libraries})
+# ament_target_dependencies(gmm_visualizer ${dependencies})
 
-add_executable(supervisor_gmm src/supervisor_gmm.cpp )
-target_link_libraries(supervisor_gmm ${SFML_libraries})
-ament_target_dependencies(supervisor_gmm ${dependencies})
+# add_executable(supervisor_gmm src/supervisor_gmm.cpp )
+# target_link_libraries(supervisor_gmm ${SFML_libraries})
+# ament_target_dependencies(supervisor_gmm ${dependencies})
 
-add_executable(gmm_test src/gmm_test_node.cpp )
-# target_link_libraries(gmm_test ${SFML_libraries})
-ament_target_dependencies(gmm_test ${dependencies})
+# add_executable(gmm_test src/gmm_test_node.cpp )
+# # target_link_libraries(gmm_test ${SFML_libraries})
+# ament_target_dependencies(gmm_test ${dependencies})
 
-add_executable(target_publisher_node src/target_publisher_node.cpp )
-ament_target_dependencies(target_publisher_node ${dependencies})
+# add_executable(target_publisher_node src/target_publisher_node.cpp )
+# ament_target_dependencies(target_publisher_node ${dependencies})
 
-add_executable(gmm_calc src/gmm_calc.cpp)
-target_link_libraries(gmm_calc ${SFML_libraries})
-ament_target_dependencies(gmm_calc ${dependencies})
+# add_executable(gmm_calc src/gmm_calc.cpp)
+# target_link_libraries(gmm_calc ${SFML_libraries})
+# ament_target_dependencies(gmm_calc ${dependencies})
 
 
 # Install python modules
-ament_python_install_package(${PROJECT_NAME})
+# ament_python_install_package(${PROJECT_NAME})
 
 # Install python executables
-install(PROGRAMS
-  scripts/interface.py
-  DESTINATION lib/${PROJECT_NAME}
-  )
+#install(PROGRAMS
+#  scripts/interface.py
+#  DESTINATION lib/${PROJECT_NAME}
+#  )
 
   
-install(TARGETS centralized_gmm distributed_gmm gmm_visualizer supervisor_gmm gmm_test hs_interface target_publisher_node gmm_calc
+install(TARGETS  distributed_gmm    
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -144,10 +136,8 @@ ament_export_dependencies(rclpy)
 ament_export_dependencies(sensor_msgs)
 ament_export_dependencies(tf2)
 ament_export_dependencies(tf2_ros)
-ament_export_dependencies(turtlebot3_msgs)
-ament_export_dependencies(gmm_msgs)
 ament_export_dependencies(visualization_msgs)
-ament_export_dependencies(gaussian_mixture_model)
-ament_export_dependencies(rosidl_default_runtime)
+ament_export_dependencies(arrc_interfaces)
+# ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()

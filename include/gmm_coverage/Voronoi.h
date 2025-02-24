@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Sparse>
 
 // My includes
 #include "FortuneAlgorithm.h"
@@ -12,8 +12,8 @@
 #include <iostream>
 // #include "/home/mattia/arscontrol_turtlebot/install/gmm_msgs/include/gmm_msgs/msg/gmm.hpp"
 // #include "/home/mattia/arscontrol_turtlebot/install/gmm_msgs/include/gmm_msgs/msg/gaussian.hpp"
-#include "gmm_msgs/msg/gmm.hpp"
-#include "gmm_msgs/msg/gaussian.hpp"
+// #include "gmm_msgs/msg/gmm.hpp"
+// #include "gmm_msgs/msg/gaussian.hpp"
 
 
 #define M_PI   3.14159265358979323846  /*pi*/
@@ -22,11 +22,11 @@
 
 float gauss3d_pdf(std::vector<float> mean, std::vector<std::vector<float>> var, std::vector<float> pt);
 float multiple_gauss3d_pdf(std::vector<std::vector<float>> means_pt, std::vector<std::vector<std::vector<float>>> vars, std::vector<float> pt, std::vector<float> weights);
-float gauss3d_pdf2(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt);
-float multiple_gauss3d_pdf2(gmm_msgs::msg::GMM gmm, std::vector<float> pt);
-float single_component_pdf(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt);
-float mixture_pdf(gmm_msgs::msg::GMM gmm, std::vector<float> pt);
-std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gmm_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes, float discretize_precision);
+// float gauss3d_pdf2(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt);
+// float multiple_gauss3d_pdf2(gmm_msgs::msg::GMM gmm, std::vector<float> pt);
+// float single_component_pdf(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt);
+// float mixture_pdf(gmm_msgs::msg::GMM gmm, std::vector<float> pt);
+// std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gmm_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes, float discretize_precision);
 
 //***********************************************************************************************************************************
 //-------------------------------- FUNZIONI AUSILIARIE INIZIALI (trasformazione coordinate + sensing) ---------------------------------
@@ -1197,145 +1197,146 @@ std::vector<float> computeGMMPolygonCentroid(const Diagram<double> &polygon, std
     return C;
 }
 
-// Funzione per il calcolo del centroide in caso di GMM definite con messaggio custom
-std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gmm_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes = {}, float discretize_precision = 1.0/10.0){
+
+// // Funzione per il calcolo del centroide in caso di GMM definite con messaggio custom
+// std::vector<float> computeGMMPolygonCentroid2(const Diagram<double> &polygon, gmm_msgs::msg::GMM gmm, std::vector<Box<double>> ObstacleBoxes = {}, float discretize_precision = 1.0/10.0){
     
-    // Transform GMM to local coordinates
-    gmm_msgs::msg::GMM gmm_local;
-    gmm_local.weights = gmm.weights;
-    for (long unsigned int i = 0; i < gmm.gaussians.size(); ++i)
-    {
-        gmm_local.gaussians.push_back(gmm.gaussians[i]);
-        gmm_local.gaussians[i].mean_point.x = gmm.gaussians[i].mean_point.x - polygon.getGlobalPoint().x;
-        gmm_local.gaussians[i].mean_point.y = gmm.gaussians[i].mean_point.y - polygon.getGlobalPoint().y;
-        gmm_local.gaussians[i].mean_point.z = 0.0;
-        gmm_local.gaussians[i].covariance = gmm.gaussians[i].covariance;
-    }
+//     // Transform GMM to local coordinates
+//     gmm_msgs::msg::GMM gmm_local;
+//     gmm_local.weights = gmm.weights;
+//     for (long unsigned int i = 0; i < gmm.gaussians.size(); ++i)
+//     {
+//         gmm_local.gaussians.push_back(gmm.gaussians[i]);
+//         gmm_local.gaussians[i].mean_point.x = gmm.gaussians[i].mean_point.x - polygon.getGlobalPoint().x;
+//         gmm_local.gaussians[i].mean_point.y = gmm.gaussians[i].mean_point.y - polygon.getGlobalPoint().y;
+//         gmm_local.gaussians[i].mean_point.z = 0.0;
+//         gmm_local.gaussians[i].covariance = gmm.gaussians[i].covariance;
+//     }
 
-    //DEBUG
-    // std::cout<<"gaussian relative position ::: "<<pt_means[0]<<"\n"<<std::scientific;
-    // std::cout << "Elenco gaussiane relative: \n";
-    // for (int i=0; i<gmm_local.gaussians.size(); i++)
-    // {
-    //     std::cout << gmm_local.gaussians[i].mean_point.x << ", " << gmm_local.gaussians[i].mean_point.y << std::endl;
-    // }
+//     //DEBUG
+//     // std::cout<<"gaussian relative position ::: "<<pt_means[0]<<"\n"<<std::scientific;
+//     // std::cout << "Elenco gaussiane relative: \n";
+//     // for (int i=0; i<gmm_local.gaussians.size(); i++)
+//     // {
+//     //     std::cout << gmm_local.gaussians[i].mean_point.x << ", " << gmm_local.gaussians[i].mean_point.y << std::endl;
+//     // }
 
-    auto seed = polygon.getSite(0);
-    auto halfedge = seed->face->outerComponent;
+//     auto seed = polygon.getSite(0);
+//     auto halfedge = seed->face->outerComponent;
 
-    //trova gli estremi del rettangolo che contengono il poligono
-    float x_inf = std::min(halfedge->origin->point.x, halfedge->destination->point.x);
-    float x_sup = std::max(halfedge->origin->point.x, halfedge->destination->point.x);
-    float y_inf = std::min(halfedge->origin->point.y, halfedge->destination->point.y);
-    float y_sup = std::max(halfedge->origin->point.y, halfedge->destination->point.y);
-    float z_inf = -2.0; float z_sup = 2.0;
-    halfedge = halfedge->next;
-
-
-    //DEBUG
-    std::vector<double> debug_x;
-    std::vector<double> debug_y;
-    debug_x.push_back(halfedge->origin->point.x);
-    debug_y.push_back(halfedge->origin->point.y);
-    debug_x.push_back(halfedge->destination->point.x);
-    debug_y.push_back(halfedge->destination->point.y);
-
-    do{
-        //------------------ x component --------------------
-        if (x_inf > halfedge->destination->point.x)
-        {
-            x_inf = halfedge->destination->point.x;
-
-        } else if (x_sup < halfedge->destination->point.x)
-        {
-            x_sup = halfedge->destination->point.x;
-        }
-
-        //------------------ y component --------------------
-        if (y_inf > halfedge->destination->point.y)
-        {
-            y_inf = halfedge->destination->point.y;
-        } else if (y_sup < halfedge->destination->point.y)
-        {
-            y_sup = halfedge->destination->point.y;
-        }
-
-        halfedge = halfedge->next;
-        //DEBUG
-        debug_x.push_back(halfedge->destination->point.x);
-        debug_y.push_back(halfedge->destination->point.y);
-
-    } while (halfedge != seed->face->outerComponent);
+//     //trova gli estremi del rettangolo che contengono il poligono
+//     float x_inf = std::min(halfedge->origin->point.x, halfedge->destination->point.x);
+//     float x_sup = std::max(halfedge->origin->point.x, halfedge->destination->point.x);
+//     float y_inf = std::min(halfedge->origin->point.y, halfedge->destination->point.y);
+//     float y_sup = std::max(halfedge->origin->point.y, halfedge->destination->point.y);
+//     float z_inf = -2.0; float z_sup = 2.0;
+//     halfedge = halfedge->next;
 
 
-    std::cout << "x_inf : " << x_inf << " x_sup : " << x_sup << " y_inf : " << y_inf << " y_sup : " << y_sup << std::endl;
+//     //DEBUG
+//     std::vector<double> debug_x;
+//     std::vector<double> debug_y;
+//     debug_x.push_back(halfedge->origin->point.x);
+//     debug_y.push_back(halfedge->origin->point.y);
+//     debug_x.push_back(halfedge->destination->point.x);
+//     debug_y.push_back(halfedge->destination->point.y);
 
-    //DEBUG
-    /*
-    std::cout<<"debug vectors x: "<<std::scientific;
-    for (int i = 0; i < debug_x.size(); ++i)
-    {
-        std::cout<<debug_x[i]<<" "<<std::scientific;
-    }
-    std::cout<<"\n"<<std::scientific;
+//     do{
+//         //------------------ x component --------------------
+//         if (x_inf > halfedge->destination->point.x)
+//         {
+//             x_inf = halfedge->destination->point.x;
 
-    std::cout<<"debug vectors y: "<<std::scientific;
-    for (int i = 0; i < debug_y.size(); ++i)
-    {
-        std::cout<<debug_y[i]<<" "<<std::scientific;
-    }
-    std::cout<<"\n"<<std::scientific;
-    */
+//         } else if (x_sup < halfedge->destination->point.x)
+//         {
+//             x_sup = halfedge->destination->point.x;
+//         }
 
-    float dx = (x_sup - x_inf)/2.0 * discretize_precision;
-    float dy = (y_sup - y_inf)/2.0 * discretize_precision;
-    float dz = (z_sup - z_inf)/2.0 * discretize_precision;
-    float dV = dx*dy*dz;
-    float V = 0;
-    float Cx = 0, Cy = 0, Cz = 0;
+//         //------------------ y component --------------------
+//         if (y_inf > halfedge->destination->point.y)
+//         {
+//             y_inf = halfedge->destination->point.y;
+//         } else if (y_sup < halfedge->destination->point.y)
+//         {
+//             y_sup = halfedge->destination->point.y;
+//         }
 
-    // Transform obstacles to local coordinates
-    std::vector<Box<double>> localObstacleBoxes(ObstacleBoxes.size());
-    for (int i=0; i<ObstacleBoxes.size(); ++i)
-    {
-        localObstacleBoxes[i] = reworkObstacle(ObstacleBoxes[i], polygon.getGlobalPoint());
-    }
+//         halfedge = halfedge->next;
+//         //DEBUG
+//         debug_x.push_back(halfedge->destination->point.x);
+//         debug_y.push_back(halfedge->destination->point.y);
 
-    for (float i = (float)x_inf; i <= x_sup; i=i+dx)
-    {
-        for (float j = (float)y_inf; j <= y_sup; j=j+dy)
-        {
-            //std::cout<<"j value :: "<<j<<"\n"<<std::scientific;
-            bool inArea = inPolygon(polygon, Vector2<double> {i+dx, j+dy});
-            bool inObstacle = inObstacles(localObstacleBoxes, Vector2<double> {i+dx, j+dy});
-            if (inArea && !inObstacle)
-            {
-                std::vector<float> point = {i, j};
-                float dV_pdf;
-                if (gmm_local.gaussians.size() <= 1)
-                {
-                    dV_pdf = dV*single_component_pdf(gmm_local.gaussians[0], point);
-                } else {
-                    dV_pdf = dV*mixture_pdf(gmm_local, point);
-                }
-                V = V + dV_pdf;
-                Cx = Cx + i*dV_pdf;
-                Cy = Cy + j*dV_pdf;
-            }
-        }
-    }
-    Cx = Cx / V;
-    Cy = Cy / V;
-    // Cz = Cz / V;
+//     } while (halfedge != seed->face->outerComponent);
 
-    // if (DEBUG >= 1)
-    // {
-    //     std::cout<<std::scientific<<" ------------------------ Area : "<<A<<std::endl;
-    // }
 
-    std::vector<float> C = {Cx, Cy, Cz};
-    return C;
-}
+//     std::cout << "x_inf : " << x_inf << " x_sup : " << x_sup << " y_inf : " << y_inf << " y_sup : " << y_sup << std::endl;
+
+//     //DEBUG
+//     /*
+//     std::cout<<"debug vectors x: "<<std::scientific;
+//     for (int i = 0; i < debug_x.size(); ++i)
+//     {
+//         std::cout<<debug_x[i]<<" "<<std::scientific;
+//     }
+//     std::cout<<"\n"<<std::scientific;
+
+//     std::cout<<"debug vectors y: "<<std::scientific;
+//     for (int i = 0; i < debug_y.size(); ++i)
+//     {
+//         std::cout<<debug_y[i]<<" "<<std::scientific;
+//     }
+//     std::cout<<"\n"<<std::scientific;
+//     */
+
+//     float dx = (x_sup - x_inf)/2.0 * discretize_precision;
+//     float dy = (y_sup - y_inf)/2.0 * discretize_precision;
+//     float dz = (z_sup - z_inf)/2.0 * discretize_precision;
+//     float dV = dx*dy*dz;
+//     float V = 0;
+//     float Cx = 0, Cy = 0, Cz = 0;
+
+//     // Transform obstacles to local coordinates
+//     std::vector<Box<double>> localObstacleBoxes(ObstacleBoxes.size());
+//     for (int i=0; i<ObstacleBoxes.size(); ++i)
+//     {
+//         localObstacleBoxes[i] = reworkObstacle(ObstacleBoxes[i], polygon.getGlobalPoint());
+//     }
+
+//     for (float i = (float)x_inf; i <= x_sup; i=i+dx)
+//     {
+//         for (float j = (float)y_inf; j <= y_sup; j=j+dy)
+//         {
+//             //std::cout<<"j value :: "<<j<<"\n"<<std::scientific;
+//             bool inArea = inPolygon(polygon, Vector2<double> {i+dx, j+dy});
+//             bool inObstacle = inObstacles(localObstacleBoxes, Vector2<double> {i+dx, j+dy});
+//             if (inArea && !inObstacle)
+//             {
+//                 std::vector<float> point = {i, j};
+//                 float dV_pdf;
+//                 if (gmm_local.gaussians.size() <= 1)
+//                 {
+//                     dV_pdf = dV*single_component_pdf(gmm_local.gaussians[0], point);
+//                 } else {
+//                     dV_pdf = dV*mixture_pdf(gmm_local, point);
+//                 }
+//                 V = V + dV_pdf;
+//                 Cx = Cx + i*dV_pdf;
+//                 Cy = Cy + j*dV_pdf;
+//             }
+//         }
+//     }
+//     Cx = Cx / V;
+//     Cy = Cy / V;
+//     // Cz = Cz / V;
+
+//     // if (DEBUG >= 1)
+//     // {
+//     //     std::cout<<std::scientific<<" ------------------------ Area : "<<A<<std::endl;
+//     // }
+
+//     std::vector<float> C = {Cx, Cy, Cz};
+//     return C;
+// }
 
 template<typename T>
 std::vector<Vector2<T>> computeDiagramsCentroids(const std::vector<Diagram<T>>& diagrams, std::vector<Vector2<T>> pt_means, std::vector<T> vars, double discretize_precision = 1.0/100.0){
@@ -1455,198 +1456,198 @@ float gauss3d_pdf(std::vector<float> mean, std::vector<std::vector<float>> var, 
     return prob;
 }
 
-float gauss3d_pdf2(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt){
-    std::vector<float> mean = {};                                // mean vector (1D, 2D or 3D)
-    std::vector<std::vector<float>> var = {};                    // covariance matrix
-    std::vector<float> row = {};                                 // covariance matrix rows
-    int var_size = sqrt(gaussian.covariance.size());             // covariance matrix size: var_size * var_size
+// float gauss3d_pdf2(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt){
+//     std::vector<float> mean = {};                                // mean vector (1D, 2D or 3D)
+//     std::vector<std::vector<float>> var = {};                    // covariance matrix
+//     std::vector<float> row = {};                                 // covariance matrix rows
+//     int var_size = sqrt(gaussian.covariance.size());             // covariance matrix size: var_size * var_size
 
-    if (var_size == 1)
-    {
-        row.push_back(gaussian.covariance[0]);
-        var.push_back(row);
-        mean.push_back(gaussian.mean_point.x);
-    } else if (var_size == 2)
-    {
-        for (int i=0; i<var_size+1; i=i+2)
-        {
-            row.clear();
-            row.push_back(gaussian.covariance[i]);
-            row.push_back(gaussian.covariance[i+1]);
-            var.push_back(row);
-        }
+//     if (var_size == 1)
+//     {
+//         row.push_back(gaussian.covariance[0]);
+//         var.push_back(row);
+//         mean.push_back(gaussian.mean_point.x);
+//     } else if (var_size == 2)
+//     {
+//         for (int i=0; i<var_size+1; i=i+2)
+//         {
+//             row.clear();
+//             row.push_back(gaussian.covariance[i]);
+//             row.push_back(gaussian.covariance[i+1]);
+//             var.push_back(row);
+//         }
         
-        mean.push_back(gaussian.mean_point.x);
-        mean.push_back(gaussian.mean_point.y);
+//         mean.push_back(gaussian.mean_point.x);
+//         mean.push_back(gaussian.mean_point.y);
 
-    } else if (var_size == 3)
-    {
-        for (int i = 0; i < var_size+1; i=i+3)
-            {
-                row.clear();
-                row.push_back(gaussian.covariance[i]);
-                row.push_back(gaussian.covariance[i+1]);
-                row.push_back(gaussian.covariance[i+2]);
-                var.push_back(row);
-            }
-        mean.push_back(gaussian.mean_point.x);
-        mean.push_back(gaussian.mean_point.y);
-        mean.push_back(gaussian.mean_point.z);
+//     } else if (var_size == 3)
+//     {
+//         for (int i = 0; i < var_size+1; i=i+3)
+//             {
+//                 row.clear();
+//                 row.push_back(gaussian.covariance[i]);
+//                 row.push_back(gaussian.covariance[i+1]);
+//                 row.push_back(gaussian.covariance[i+2]);
+//                 var.push_back(row);
+//             }
+//         mean.push_back(gaussian.mean_point.x);
+//         mean.push_back(gaussian.mean_point.y);
+//         mean.push_back(gaussian.mean_point.z);
 
-    } else {
-        std::cout << "Error in the GMM definition: Dimention mismatch" << std::endl;
-        std::cout << "Mean point dimension: " << mean.size() << std::endl;
-        std::cout << "Covariance matrix dimension: " << var_size << " x " << var_size << std::endl;
-        return -1;
-    }
+//     } else {
+//         std::cout << "Error in the GMM definition: Dimention mismatch" << std::endl;
+//         std::cout << "Mean point dimension: " << mean.size() << std::endl;
+//         std::cout << "Covariance matrix dimension: " << var_size << " x " << var_size << std::endl;
+//         return -1;
+//     }
 
-    int d = mean.size();                                    // mean point dimension
+//     int d = mean.size();                                    // mean point dimension
 
-    float det = getDeterminant(var);                          // determinant
-    if (det <= 0)
-    {  
-        std::cout << "Error! Negative determinant: " << det << std::endl;
-        return -1;
-    }
-    float denom = std::sqrt(std::pow(2*M_PI,d)*det);       // denominator
+//     float det = getDeterminant(var);                          // determinant
+//     if (det <= 0)
+//     {  
+//         std::cout << "Error! Negative determinant: " << det << std::endl;
+//         return -1;
+//     }
+//     float denom = std::sqrt(std::pow(2*M_PI,d)*det);       // denominator
 
-    // Create elements of the equation
-    std::vector<std::vector<float>> row_matrix = {{}};                                // difference between considered point and mean
-    for (int i = 0; i < d; i++)
-    {
-        row_matrix[0].push_back(pt[i]-mean[i]);
-    }
-
-
-    std::vector<std::vector<float>> inv_cov = getInverse(var);                        // covariance matrix inverse
-    std::vector<std::vector<float>> temp = multiplyMatrices(row_matrix, inv_cov);                  // first step pseudo-inverse calculation
-    std::vector<std::vector<float>> temp2 = multiplyMatrices(temp,getTranspose(row_matrix));                     // end of pseudo-inverse calculation
-    float prob = 1/denom*std::exp(-0.5*temp2[0][0]);                                     // final prob value
-
-    return prob;
-}
+//     // Create elements of the equation
+//     std::vector<std::vector<float>> row_matrix = {{}};                                // difference between considered point and mean
+//     for (int i = 0; i < d; i++)
+//     {
+//         row_matrix[0].push_back(pt[i]-mean[i]);
+//     }
 
 
-float single_component_pdf(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt){
-    // std::cout << "Entered single component pdf" << std::endl;
-    Eigen::VectorXd mean_pt;
-    Eigen::MatrixXd cov_matrix;
-    int size = sqrt(gaussian.covariance.size());        // gaussian covariance matrix size: var_size * var_size
-    mean_pt.resize(size);
-    cov_matrix.resize(size, size);
+//     std::vector<std::vector<float>> inv_cov = getInverse(var);                        // covariance matrix inverse
+//     std::vector<std::vector<float>> temp = multiplyMatrices(row_matrix, inv_cov);                  // first step pseudo-inverse calculation
+//     std::vector<std::vector<float>> temp2 = multiplyMatrices(temp,getTranspose(row_matrix));                     // end of pseudo-inverse calculation
+//     float prob = 1/denom*std::exp(-0.5*temp2[0][0]);                                     // final prob value
 
-    // std::cout << "Size: " << size << std::endl;
-
-    if (size == 1)
-    {
-        mean_pt(0) = gaussian.mean_point.x;
-        cov_matrix(0,0) = gaussian.covariance[0];
-    } else if (size == 2)
-    {
-        mean_pt(0) = gaussian.mean_point.x;
-        mean_pt(1) = gaussian.mean_point.y;
-        cov_matrix(0,0) = gaussian.covariance[0];
-        cov_matrix(0,1) = gaussian.covariance[1];
-        cov_matrix(1,0) = gaussian.covariance[2];
-        cov_matrix(1,1) = gaussian.covariance[3];
-    } else if (size == 3)
-    {
-        mean_pt(0) = gaussian.mean_point.x;
-        mean_pt(1) = gaussian.mean_point.y;
-        mean_pt(2) = gaussian.mean_point.z;
-        cov_matrix(0,0) = gaussian.covariance[0];
-        cov_matrix(0,1) = gaussian.covariance[1];
-        cov_matrix(0,2) = gaussian.covariance[2];
-        cov_matrix(1,0) = gaussian.covariance[3];
-        cov_matrix(1,1) = gaussian.covariance[4];
-        cov_matrix(1,2) = gaussian.covariance[5];
-        cov_matrix(2,0) = gaussian.covariance[6];
-        cov_matrix(2,1) = gaussian.covariance[7];
-        cov_matrix(2,2) = gaussian.covariance[8];
-    } else {
-        std::cout << "Error in the GMM definition: Dimention mismatch" << std::endl;
-        std::cout << "Mean point dimension: " << mean_pt.size() << std::endl;
-        std::cout << "Covariance matrix dimension: " << size << " x " << size << std::endl;
-        return -1;
-    }
-
-    // std::cout << "Mean point: " << mean_pt.transpose() << std::endl;
-    // std::cout << "Covariance matrix: \n" << std::endl << cov_matrix.transpose() << std::endl;    
-
-    float det = cov_matrix.determinant();    
-    // std::cout << "Determinant: " << det << std::endl;     
-
-    if (det <= 0)
-    {  
-        std::cout << "Error! Negative determinant: " << det << std::endl;
-        return -1;
-    }
-
-    float denom = std::sqrt(std::pow(2*M_PI,size)*det);                                            // denominator
-    // std::cout << "Denominator: " << denom << std::endl;
-
-    Eigen::MatrixXd row_matrix;                                                                   // difference between considered pt and mean pt (vector)       
-    row_matrix.resize(1,size);
-    for (int i=0; i<size; i++)
-    {
-        row_matrix(0,i) = pt[i] - mean_pt(i);
-    }
-    Eigen::MatrixXd inv_cov = cov_matrix.inverse();                                         // inverse of covariance matrix 
-    Eigen::MatrixXd temp;
-    temp.resize(1,1);
-    temp = row_matrix * inv_cov * row_matrix.transpose();                                       // pseudo-inverse calculation
-    float prob = 1/denom*std::exp(-0.5*temp(0,0));                                              // final value
-    // std::cout << "Prob: " << prob << std::endl;
-
-    return prob;
-}
+//     return prob;
+// }
 
 
-float mixture_pdf(gmm_msgs::msg::GMM gmm, std::vector<float> pt)
-{
-    // std::cout << "Entered multi-component pdf" << std::endl;
-    float val = 0;
+// float single_component_pdf(gmm_msgs::msg::Gaussian gaussian, std::vector<float> pt){
+//     // std::cout << "Entered single component pdf" << std::endl;
+//     Eigen::VectorXd mean_pt;
+//     Eigen::MatrixXd cov_matrix;
+//     int size = sqrt(gaussian.covariance.size());        // gaussian covariance matrix size: var_size * var_size
+//     mean_pt.resize(size);
+//     cov_matrix.resize(size, size);
 
-    // Check if GMM dimensions match
-    if (gmm.gaussians.size() != gmm.weights.size())
-    {
-        std::cout<<"Error in the GMM definition: dimension mismatch"<<std::endl;
-        return -1;
-    }
+//     // std::cout << "Size: " << size << std::endl;
 
-    // Check if sum of weights is 1
-    float sum_weights = 0;
-    for (int i = 0; i < gmm.weights.size(); i++)
-    {
-        sum_weights += gmm.weights[i];
-    }
+//     if (size == 1)
+//     {
+//         mean_pt(0) = gaussian.mean_point.x;
+//         cov_matrix(0,0) = gaussian.covariance[0];
+//     } else if (size == 2)
+//     {
+//         mean_pt(0) = gaussian.mean_point.x;
+//         mean_pt(1) = gaussian.mean_point.y;
+//         cov_matrix(0,0) = gaussian.covariance[0];
+//         cov_matrix(0,1) = gaussian.covariance[1];
+//         cov_matrix(1,0) = gaussian.covariance[2];
+//         cov_matrix(1,1) = gaussian.covariance[3];
+//     } else if (size == 3)
+//     {
+//         mean_pt(0) = gaussian.mean_point.x;
+//         mean_pt(1) = gaussian.mean_point.y;
+//         mean_pt(2) = gaussian.mean_point.z;
+//         cov_matrix(0,0) = gaussian.covariance[0];
+//         cov_matrix(0,1) = gaussian.covariance[1];
+//         cov_matrix(0,2) = gaussian.covariance[2];
+//         cov_matrix(1,0) = gaussian.covariance[3];
+//         cov_matrix(1,1) = gaussian.covariance[4];
+//         cov_matrix(1,2) = gaussian.covariance[5];
+//         cov_matrix(2,0) = gaussian.covariance[6];
+//         cov_matrix(2,1) = gaussian.covariance[7];
+//         cov_matrix(2,2) = gaussian.covariance[8];
+//     } else {
+//         std::cout << "Error in the GMM definition: Dimention mismatch" << std::endl;
+//         std::cout << "Mean point dimension: " << mean_pt.size() << std::endl;
+//         std::cout << "Covariance matrix dimension: " << size << " x " << size << std::endl;
+//         return -1;
+//     }
 
-    std::vector<float> normalized_weights;
+//     // std::cout << "Mean point: " << mean_pt.transpose() << std::endl;
+//     // std::cout << "Covariance matrix: \n" << std::endl << cov_matrix.transpose() << std::endl;    
 
-    if (sum_weights != 1)
-    {
-        // DEBUG
-        // std::cout<<"Error in the GMM definition: weights do not sum to 1"<<std::endl;
-        // std::cout << "Weights vector will be normalized!" << std::endl;
-        for (int i = 0; i < gmm.weights.size(); i++)
-        {
-            normalized_weights.push_back(gmm.weights[i]/sum_weights);
-        }
-    } else {
-        for (int i = 0; i < gmm.weights.size(); i++)
-        {
-            normalized_weights.push_back(gmm.weights[i]);
-        }
-    }
+//     float det = cov_matrix.determinant();    
+//     // std::cout << "Determinant: " << det << std::endl;     
 
-    for (int i = 0; i < gmm.gaussians.size(); i++)
-    {
-        val = val + normalized_weights[i]*single_component_pdf(gmm.gaussians[i], pt);
-    }
+//     if (det <= 0)
+//     {  
+//         std::cout << "Error! Negative determinant: " << det << std::endl;
+//         return -1;
+//     }
+
+//     float denom = std::sqrt(std::pow(2*M_PI,size)*det);                                            // denominator
+//     // std::cout << "Denominator: " << denom << std::endl;
+
+//     Eigen::MatrixXd row_matrix;                                                                   // difference between considered pt and mean pt (vector)       
+//     row_matrix.resize(1,size);
+//     for (int i=0; i<size; i++)
+//     {
+//         row_matrix(0,i) = pt[i] - mean_pt(i);
+//     }
+//     Eigen::MatrixXd inv_cov = cov_matrix.inverse();                                         // inverse of covariance matrix 
+//     Eigen::MatrixXd temp;
+//     temp.resize(1,1);
+//     temp = row_matrix * inv_cov * row_matrix.transpose();                                       // pseudo-inverse calculation
+//     float prob = 1/denom*std::exp(-0.5*temp(0,0));                                              // final value
+//     // std::cout << "Prob: " << prob << std::endl;
+
+//     return prob;
+// }
 
 
-    return val;
-}
+// float mixture_pdf(gmm_msgs::msg::GMM gmm, std::vector<float> pt)
+// {
+//     // std::cout << "Entered multi-component pdf" << std::endl;
+//     float val = 0;
+
+//     // Check if GMM dimensions match
+//     if (gmm.gaussians.size() != gmm.weights.size())
+//     {
+//         std::cout<<"Error in the GMM definition: dimension mismatch"<<std::endl;
+//         return -1;
+//     }
+
+//     // Check if sum of weights is 1
+//     float sum_weights = 0;
+//     for (int i = 0; i < gmm.weights.size(); i++)
+//     {
+//         sum_weights += gmm.weights[i];
+//     }
+
+//     std::vector<float> normalized_weights;
+
+//     if (sum_weights != 1)
+//     {
+//         // DEBUG
+//         // std::cout<<"Error in the GMM definition: weights do not sum to 1"<<std::endl;
+//         // std::cout << "Weights vector will be normalized!" << std::endl;
+//         for (int i = 0; i < gmm.weights.size(); i++)
+//         {
+//             normalized_weights.push_back(gmm.weights[i]/sum_weights);
+//         }
+//     } else {
+//         for (int i = 0; i < gmm.weights.size(); i++)
+//         {
+//             normalized_weights.push_back(gmm.weights[i]);
+//         }
+//     }
+
+//     for (int i = 0; i < gmm.gaussians.size(); i++)
+//     {
+//         val = val + normalized_weights[i]*single_component_pdf(gmm.gaussians[i], pt);
+//     }
+
+
+//     return val;
+// }
 
 //funzione per calcolare il valore di un punto data una serie di distribuzioni a forma di gaussiana 3D
 float multiple_gauss3d_pdf(std::vector<std::vector<float>> means_pt, std::vector<std::vector<std::vector<float>>> vars, std::vector<float> pt, std::vector<float> weights){
@@ -1684,49 +1685,49 @@ float multiple_gauss3d_pdf(std::vector<std::vector<float>> means_pt, std::vector
     return val;
 }
 
-//funzione per calcolare il valore di un punto dato un Gaussian Mixture Model
-float multiple_gauss3d_pdf2(gmm_msgs::msg::GMM gmm, std::vector<float> pt){
-    float val = 0;
+// //funzione per calcolare il valore di un punto dato un Gaussian Mixture Model
+// float multiple_gauss3d_pdf2(gmm_msgs::msg::GMM gmm, std::vector<float> pt){
+//     float val = 0;
 
-    // devo avere stesso numero di punti medi, varianze e pesi
-    if (gmm.gaussians.size() != gmm.weights.size())
-    {
-        std::cout<<"Error in the GMM definition: dimension mismatch"<<std::endl;
-        return -1;
-    }
+//     // devo avere stesso numero di punti medi, varianze e pesi
+//     if (gmm.gaussians.size() != gmm.weights.size())
+//     {
+//         std::cout<<"Error in the GMM definition: dimension mismatch"<<std::endl;
+//         return -1;
+//     }
 
-    // calcolo somma dei pesi e controllo che sia uguale a 1
-    float sum_weights = 0;
-    for (int i = 0; i < gmm.weights.size(); i++)
-    {
-        sum_weights += gmm.weights[i];
-    }
+//     // calcolo somma dei pesi e controllo che sia uguale a 1
+//     float sum_weights = 0;
+//     for (int i = 0; i < gmm.weights.size(); i++)
+//     {
+//         sum_weights += gmm.weights[i];
+//     }
 
-    std::vector<float> normalized_weights;
+//     std::vector<float> normalized_weights;
 
-    if (sum_weights != 1)
-    {
-        std::cout<<"Error in the GMM definition: weights do not sum to 1"<<std::endl;
-        std::cout << "Weights vector will be normalized!" << std::endl;
-        for (int i = 0; i < gmm.weights.size(); i++)
-        {
-            normalized_weights.push_back(gmm.weights[i]/sum_weights);
-        }
-    } else {
-        for (int i = 0; i < gmm.weights.size(); i++)
-        {
-            normalized_weights.push_back(gmm.weights[i]);
-        }
-    }
+//     if (sum_weights != 1)
+//     {
+//         std::cout<<"Error in the GMM definition: weights do not sum to 1"<<std::endl;
+//         std::cout << "Weights vector will be normalized!" << std::endl;
+//         for (int i = 0; i < gmm.weights.size(); i++)
+//         {
+//             normalized_weights.push_back(gmm.weights[i]/sum_weights);
+//         }
+//     } else {
+//         for (int i = 0; i < gmm.weights.size(); i++)
+//         {
+//             normalized_weights.push_back(gmm.weights[i]);
+//         }
+//     }
 
-    for (int i = 0; i < gmm.gaussians.size(); i++)
-    {
-        val = val + normalized_weights[i]*single_component_pdf(gmm.gaussians[i], pt);
-    }
+//     for (int i = 0; i < gmm.gaussians.size(); i++)
+//     {
+//         val = val + normalized_weights[i]*single_component_pdf(gmm.gaussians[i], pt);
+//     }
 
 
-    return val;
-}
+//     return val;
+// }
 
 
 

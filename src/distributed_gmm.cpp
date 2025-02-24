@@ -5,6 +5,7 @@
 #include <random>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/impl/utils.h>
+#include <tf2/utils.h>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -47,10 +48,11 @@
 #include <geometry_msgs/msg/polygon.hpp>
 #include <geometry_msgs/msg/polygon_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include "arrc_interfaces/msg/uav_vel_acc.hpp"
 // #include "gmm_msgs/msg/gaussian.hpp"
 // #include "gmm_msgs/msg/gmm.hpp"
-#include "gmm_msgs/msg/gaussian.hpp"
-#include "gmm_msgs/msg/gmm.hpp"
+// #include "gmm_msgs/msg/gaussian.hpp"
+// #include "gmm_msgs/msg/gmm.hpp"
 
 #define M_PI   3.14159265358979323846  /*pi*/
 
@@ -77,80 +79,57 @@ class Controller : public rclcpp::Node
 {
 
 public:
-    Controller() : Node("distributed_gmm_distribution")
+    Controller() : Node("distrbuted_gmm_coverage_node")
     {
         //------------------------------------------------- ROS parameters ---------------------------------------------------------
-        this->declare_parameter<int>("ROBOTS_NUM", 5);
+        // ----------- params ----------
+        RCLCPP_INFO_STREAM(this->get_logger(), "GMM Coverage constructor called.");
+        this->declare_parameter<int>("ROBOTS_NUM", 3);
         this->get_parameter("ROBOTS_NUM", ROBOTS_NUM);
-        this->declare_parameter<int>("ID",0);
-        this->get_parameter("ID", ID);
-        this->declare_parameter<bool>("SIM",true);
-        this->get_parameter("SIM", SIM);
-        this->declare_parameter<bool>("GUI",false);
-        this->get_parameter("GUI", GUI);
-
-        //Range di percezione singolo robot (= metà lato box locale)
-        this->declare_parameter<double>("ROBOT_RANGE", 2);
+        this->declare_parameter<double>("ROBOT_RANGE", 5.0);
         this->get_parameter("ROBOT_RANGE", ROBOT_RANGE);
-
-        //view graphical voronoi rapresentation - bool
-        this->declare_parameter<bool>("GRAPHICS_ON", false);
-        this->get_parameter("GRAPHICS_ON", GRAPHICS_ON);
+        std::cout << "Robots number: " << ROBOTS_NUM << std::endl;
+        UAV_NAME = std::getenv("UAV_NAME");
+        std::cout << "NAME: " << UAV_NAME << std::endl;
+        ID = UAV_NAME[5] - '0';
+        std::cout << "I'm UAV " << ID << std::endl;
 
         // Area parameter
-        this->declare_parameter<double>("AREA_SIZE_x", 10);
+        this->declare_parameter<double>("AREA_SIZE_x", 20);
         this->get_parameter("AREA_SIZE_x", AREA_SIZE_x);
-        this->declare_parameter<double>("AREA_SIZE_y", 10);
+        this->declare_parameter<double>("AREA_SIZE_y", 20);
         this->get_parameter("AREA_SIZE_y", AREA_SIZE_y);
-        this->declare_parameter<double>("AREA_LEFT", -5);
+        this->declare_parameter<double>("AREA_LEFT", -10);
         this->get_parameter("AREA_LEFT", AREA_LEFT);
-        this->declare_parameter<double>("AREA_BOTTOM", -5);
+        this->declare_parameter<double>("AREA_BOTTOM", -10);
         this->get_parameter("AREA_BOTTOM", AREA_BOTTOM);
 
+        // ---------- pub/sub ---------
+        for (int i = 1; i < ROBOTS_NUM+1; i++)
+        {
+            odomSubs_.push_back(this->create_subscription<nav_msgs::msg::Odometry>("/Drone" + std::to_string(i) + "/odometry", 1,  [this, i](nav_msgs::msg::Odometry::SharedPtr msg) {this->odomCallback(msg,i);}));
+        }
+        velPub_ = this->create_publisher<arrc_interfaces::msg::UavVelAcc>("/Drone" + std::to_string(ID) + "/command/setVelocityAcceleration", 1);
+        voronoiPub = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/voronoi"+std::to_string(ID)+"_diagram", 1);
+        timer_ = this->create_wall_timer(200ms, std::bind(&Controller::loop, this));
+        //rclcpp::on_shutdown(std::bind(&Controller::stop,this));
+
+        robots.resize(3, ROBOTS_NUM);
+
+        // GMM params
+        means = {{-2.0, -1.0}};
+        std::vector<std::vector<float>> single_var = {{0.5, 0.0}, {0.0, 0.5}};
+
+        for (int i = 0; i < means.size(); ++i)
+        {
+            weights.push_back(1.0/means.size());
+            vars.push_back(single_var);
+            std::cout << "GMM " << i << ": " << means[i][0] << ", " << means[i][1] << std::endl;
+            std::cout << "weight: " << weights[i] << std::endl;
+        }
         
-	
-	if (std::getenv("TURTLEBOT3_ID") != NULL)
-		{
-		 const char * env_id = std::getenv("TURTLEBOT3_ID");
-		//  std::cout << "ID: " << env_id << " numero: " << env_id[6] << std::endl;
-		 ID = env_id[6] - '0';
-		 std::cout << "HI, I'M ROBOT NUMBER " << std::to_string(ID) << std::endl;
-		 }
-        //-----------------------------------------------------------------------------------------------------------------------------------
-
-        //--------------------------------------------------- Subscribers and Publishers ----------------------------------------------------
-    if (SIM)
-    {
-        // std::cout << "SONO IN SIMULAZIONE\n";
-        for (int i = 0; i < ROBOTS_NUM; i++)
-        {
-            odomSub_.push_back(this->create_subscription<nav_msgs::msg::Odometry>("/turtlebot" + std::to_string(i) + "/odom", 100, [this, i](nav_msgs::msg::Odometry::SharedPtr msg) {this->odomCallback(msg,i);}));
-            velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtlebot" + std::to_string(ID) + "/cmd_vel", 1));
-        }
-    } else
-    {
-        // std::cout << "NON SONO IN SIMULAZIONE\n";
-        for (int i = 0; i < ROBOTS_NUM; i++)
-        {
-            poseSub_.push_back(this->create_subscription<geometry_msgs::msg::PoseStamped>("/vrpn_client_node/turtle" + std::to_string(i) + "/pose", 100, [this, i](geometry_msgs::msg::PoseStamped::SharedPtr msg) {this->poseCallback(msg,i);}));
-            velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtle" + std::to_string(ID) + "/cmd_vel", 1));
-        }
     }
-    
-    joySub_ = this->create_subscription<geometry_msgs::msg::Twist>("/joy_vel", 1, std::bind(&Controller::joy_callback, this, _1));
-    gmmSub_ = this->create_subscription<gmm_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, _1));
-    voronoiPub = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/voronoi"+std::to_string(ID)+"_diagram", 1);
-    timer_ = this->create_wall_timer(200ms, std::bind(&Controller::Formation, this));
-    //rclcpp::on_shutdown(std::bind(&Controller::stop,this));
 
-    //----------------------------------------------------------- init Variables ---------------------------------------------------------
-    pose_x = Eigen::VectorXd::Zero(ROBOTS_NUM);
-    pose_y = Eigen::VectorXd::Zero(ROBOTS_NUM);
-    pose_theta = Eigen::VectorXd::Zero(ROBOTS_NUM);
-    time(&this->timer_init_count);
-    time(&this->timer_final_count);
-	this->got_gmm = false;//------------------------------------------------------------------------------------------------------------------------------------
-    }
     ~Controller()
     {
         std::cout<<"DESTROYER HAS BEEN CALLED"<<std::endl;
@@ -158,13 +137,8 @@ public:
 
     //void stop(int signum);
     void stop();
-    void test_print();
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int j);
-    void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg, int j);
-    void joy_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
-    void gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg);
-    void Formation();
-    geometry_msgs::msg::Twist Diff_drive_compute_vel(double vel_x, double vel_y, double alfa);
+    void loop();
 
 
     //open write and close LOG file
@@ -177,60 +151,30 @@ private:
     int ROBOTS_NUM;
     double ROBOT_RANGE;
     int ID;
-    bool SIM;
-    bool GUI;
-    bool NotJustStarted;           // Flag per indicare che sono al primo ciclo di esecuzione del nodo
-    bool got_gmm;
-    double vel_linear_x, vel_angular_z;
-    Eigen::VectorXd pose_x;
-    Eigen::VectorXd pose_y;
-    Eigen::VectorXd pose_theta;
-    std::vector<Vector2<double>> seeds_xy;
-    int seeds_counter = 0;
-    std::vector<std::vector<double>> corners;
-    std::vector<double> position;
-    std::vector<std::vector<Vector2<double>>> old_positions;                    // vector containing last 10 positions of each robot
+    std::string UAV_NAME = "Drone1";
 
-    //------------------------- Publishers and subscribers ------------------------------
-    std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> velPub_;
-    std::vector<rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr> poseSub_;
-    std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> odomSub_;
-    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr joySub_;
-    rclcpp::Subscription<gmm_msgs::msg::GMM>::SharedPtr gmmSub_;
+    Eigen::MatrixXd robots;
+    Eigen::Vector3d p_i;
+    
+    // ------------------------ ROS params --------------------------------
+    rclcpp::Publisher<arrc_interfaces::msg::UavVelAcc>::SharedPtr velPub_;
+    std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> odomSubs_;
     rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr voronoiPub;
     rclcpp::TimerBase::SharedPtr timer_;
-    gmm_msgs::msg::GMM gmm_msg;
     geometry_msgs::msg::Polygon polygon_msg;
     geometry_msgs::msg::PolygonStamped polygonStamped_msg;
-    
-    //-----------------------------------------------------------------------------------
-
-    //Rendering with SFML
-    //------------------------------ graphics window -------------------------------------
-    // std::unique_ptr<Graphics> app_gui;
-    //------------------------------------------------------------------------------------
 
     //---------------------------- Environment definition --------------------------------
     double AREA_SIZE_x;
     double AREA_SIZE_y;
     double AREA_LEFT;
     double AREA_BOTTOM;
-    //------------------------------------------------------------------------------------
+    
+    //------------------------------- GMM params --------------------------------------------
+    std::vector<std::vector<float>> means;
+    std::vector<std::vector<std::vector<float>>> vars;
+    std::vector<float> weights;
 
-    //---------------------- Gaussian Density Function parameters ------------------------
-    bool GAUSSIAN_DISTRIBUTION;
-    double PT_X;
-    double PT_Y;
-    double VAR;
-
-    //------------------------------------------------------------------------------------
-
-    //graphical view - ON/OFF
-    bool GRAPHICS_ON;
-
-    //timer - check how long robots are being stopped
-    time_t timer_init_count;
-    time_t timer_final_count;
 
     //ofstream on external log file
     std::ofstream log_file;
@@ -239,135 +183,33 @@ private:
 
 
 
-void Controller::test_print()
-{
-    std::cout<<"ENTERED"<<std::endl;
-}
-
 void Controller::stop()
 {
-    //if (signum == SIGINT || signum == SIGKILL || signum ==  SIGQUIT || signum == SIGTERM)
-    RCLCPP_INFO_STREAM(this->get_logger(), "shutting down the controller, stopping the robots, closing the graphics window");
-    // if ((GRAPHICS_ON) && (this->app_gui->isOpen())){
-    //     this->app_gui->close();
-    // }
+    RCLCPP_INFO_STREAM(this->get_logger(), "shutting down the controller, stopping the robot.");
     this->timer_->cancel();
     rclcpp::sleep_for(100000000ns);
 
-    geometry_msgs::msg::Twist vel_msg;
-    for (int i = 0; i < 100; ++i)
-    {
-        for (int r = 0; r < ROBOTS_NUM; ++r)
-        {
-            this->velPub_[r]->publish(vel_msg);
-        }
-    }
-
-    RCLCPP_INFO_STREAM(this->get_logger(), "controller has been closed and robots have been stopped");
+    RCLCPP_INFO_STREAM(this->get_logger(), "controller has been closed and robot has been stopped");
     rclcpp::sleep_for(100000000ns);
 }
 
-void Controller::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int j)
+void Controller::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg, int id)
 {
-    this->pose_x(j) = msg->pose.pose.position.x;
-    this->pose_y(j) = msg->pose.pose.position.y;
-
-    tf2::Quaternion q(
-    msg->pose.pose.orientation.x,
-    msg->pose.pose.orientation.y,
-    msg->pose.pose.orientation.z,
-    msg->pose.pose.orientation.w);
+    tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
     tf2::Matrix3x3 m(q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
-
-    this->pose_theta(j) = yaw;
+    robots.col(id-1) << msg->pose.pose.position.x, msg->pose.pose.position.y, yaw;
 }
 
-void Controller::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg, int j)
+
+
+void Controller::loop()
 {
-    this->pose_x(j) = msg->pose.position.x;
-    this->pose_y(j) = msg->pose.position.z;
-
-    tf2::Quaternion q(
-    msg->pose.orientation.x - 0.707,
-    msg->pose.orientation.y,
-    msg->pose.orientation.z,
-    msg->pose.orientation.w + 0.707);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-
-    this->pose_theta(j) = yaw;
-
-    // std::cout << "ROBOT " << std::to_string(ID) << " pose_x: " << std::to_string(this->pose_x(j)) << ", pose_y: " << std::to_string(this->pose_y(j)) << ", theta: " << std::to_string(this->pose_theta(j)) << std::endl;
-}
-
-void Controller::joy_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
-{
-    this->vel_linear_x = msg->linear.x;
-    this->vel_angular_z = msg->angular.z;
-}
-
-void Controller::gmm_callback(const gmm_msgs::msg::GMM::SharedPtr msg)
-{
-    this->gmm_msg.gaussians = msg->gaussians;
-    this->gmm_msg.weights = msg->weights;
-    this->got_gmm = true;
-    // RCLCPP_INFO_STREAM(this->get_logger(), "Sto ricevendo il GMM");
-}
-
-
-geometry_msgs::msg::Twist Controller::Diff_drive_compute_vel(double vel_x, double vel_y, double alfa){
-    //-------------------------------------------------------------------------------------------------------
-    //Compute velocities commands for the robot: differential drive control, for UAVs this is not necessary
-    //-------------------------------------------------------------------------------------------------------
-
-    geometry_msgs::msg::Twist vel_msg;
-    //double alfa = (this->pose_theta(i));
-    double v=0, w=0;
-
-    v = cos(alfa) * vel_x + sin(alfa) * vel_y;
-    w = -(1 / b) * sin(alfa) * vel_x + (1 / b) * cos(alfa) * vel_y;
-
-    if (abs(v) <= MAX_LIN_VEL)
-    {
-        vel_msg.linear.x = v;
-    }
-    else {
-        if (v >= 0)
-        {
-            vel_msg.linear.x = MAX_LIN_VEL;
-        } else {
-            vel_msg.linear.x = -MAX_LIN_VEL;
-        }
-    }
-
-    if (abs(w) <= MAX_ANG_VEL)
-    {
-        vel_msg.angular.z = w;
-    }
-    else{
-        if (w >= 0)
-        {
-            vel_msg.angular.z = MAX_ANG_VEL;
-        } else {
-            vel_msg.angular.z = -MAX_ANG_VEL;
-        }
-    }
-    return vel_msg;
-}
-
-
-
-
-void Controller::Formation()
-{
-    if(!this->got_gmm) return;	
     auto start = this->get_clock()->now().nanoseconds();
     //Parameters
     //double min_dist = 0.4;         //avoid robot collision
-    int K_gain = 1;                  //Lloyd law gain
+    double K_gain = 0.8;                  //Lloyd law gain
     this->log_line_counter = this->log_line_counter + 1;
 
     //Variables
@@ -380,46 +222,47 @@ void Controller::Formation()
     Box<double> AreaBox{AREA_LEFT, AREA_BOTTOM, AREA_SIZE_x + AREA_LEFT, AREA_SIZE_y + AREA_BOTTOM};
     Box<double> RangeBox{-ROBOT_RANGE, -ROBOT_RANGE, ROBOT_RANGE, ROBOT_RANGE};
 
-    std::vector<Box<double>> ObstacleBoxes = {};
-
+    p_i = robots.col(ID-1);
+    std::cout << "Robot "<< ID << " in " << p_i.transpose() << std::endl;
+    std::cout << "All robots : " << robots.transpose() << std::endl;
+    
 
     for (int i = 0; i < ROBOTS_NUM; ++i)
     {
-        if ((this->pose_x(i) != 0.0) && (this->pose_y(i) != 0.0))
+        if (!robots.col(i).isZero(0))
         {
-            seeds.push_back({this->pose_x(i), this->pose_y(i)});    
+            seeds.push_back({robots(0, i), robots(1, i)});    
         }
         // centroids.push_back({this->pose_x(i), this->pose_y(i)});
     }
 
-    if ((this->pose_x(ID) != 0.0) && (this->pose_y(ID) != 0.0))
+    if (!robots.col(ID-1).isZero(0))
     {
         bool robot_stopped = true;
 
         //-----------------Voronoi--------------------
         //Rielaborazione vettore "points" globale in coordinate locali
-        auto local_seeds_i = reworkPointsVector(seeds, seeds[ID]);
+        auto local_seeds_i = reworkPointsVector(seeds, seeds[ID-1]);
 
         // std::cout << "Punto medio gaussiana 1: " << this->gmm_msg.gaussians[0].mean_point.x << ", " << this->gmm_msg.gaussians[0].mean_point.y << std::endl; 
         //Filtraggio siti esterni alla box (simula azione del sensore)
         auto flt_seeds = filterPointsVector(local_seeds_i, RangeBox);
-        auto diagram = generateDecentralizedDiagram(flt_seeds, RangeBox, seeds[ID], ROBOT_RANGE, AreaBox);
+        auto diagram = generateDecentralizedDiagram(flt_seeds, RangeBox, seeds[ID-1], ROBOT_RANGE, AreaBox);
 	    // std::cout<<"GOT DIAGRAM\n";
         auto verts = diagram.getVertices();
 
         this->polygon_msg.points.clear();
+        // auto iter = verts.begin();
+        // for (int i = 0; i < verts.size(); ++i)
+        // {
+        //     geometry_msgs::msg::Point32 pt;
+        //     std::advance(iter, i); // Move iterator to the i-th position
+        //     pt.x = *iter->point.x;
+        //     pt.y = *iter->point.y;
+        //     this->polygon_msg.points.push_back(pt);
+        // }
 
-        if (GUI)
-        {
-            for (auto v : verts)
-            {
-                geometry_msgs::msg::Point32 p;
-                p.x = this->pose_x(ID) + v.point.x;                 // global position
-                p.y = this->pose_y(ID) + v.point.y;                 // global position
-                p.z = 0.0;
-                this->polygon_msg.points.push_back(p);   
-            }
-        }
+
         // DEBUG
         // std::cout << "Vertici Poligono: \n";
         // for (int i = 0; i < this->polygon_msg.points.size(); ++i)
@@ -428,14 +271,16 @@ void Controller::Formation()
         // }
 
         this->polygonStamped_msg.header.stamp = this->get_clock()->now();
-        this->polygonStamped_msg.header.frame_id = "odom";
+        this->polygonStamped_msg.header.frame_id = "common_origin";
         this->polygonStamped_msg.polygon = this->polygon_msg;
         //compute centroid -- GAUSSIAN DISTRIBUTION
-        centroid = computeGMMPolygonCentroid2(diagram, this->gmm_msg, ObstacleBoxes);
-
+        centroid = computeGMMPolygonCentroid(diagram, this->means, this->vars, this->weights);
+        std::cout << "centroid: " << centroid[0] << ", " << centroid[1] << std::endl;
         double norm = sqrt(centroid[0]*centroid[0] + centroid[1]*centroid[1]);
+        std::cout << "dist to centroid: " << norm << std::endl;
         if (norm > CONVERGENCE_TOLERANCE)
         {
+            std::cout << "ciao\n";
             vel_x = K_gain*(centroid[0]);
             vel_y = K_gain*(centroid[1]);
             vel_z = K_gain*(centroid[2]);
@@ -448,34 +293,24 @@ void Controller::Formation()
         }
 
         std::cout<<"sending velocities to " << ID << ":: " << vel_x << ", "<<vel_y<<std::endl;
+        arrc_interfaces::msg::UavVelAcc vel_msg;
+        vel_msg.header.frame_id = "common_origin";
+        vel_msg.velocity.x = vel_x;
+        vel_msg.velocity.y = vel_y;
+        vel_msg.velocity.z = 0.0;
+        vel_msg.acceleration.x = std::nan("1");
+        vel_msg.acceleration.y = std::nan("1");
+        vel_msg.acceleration.z = std::nan("1");
+        vel_msg.yaw = std::nan("1");
+        vel_msg.yaw_rate = 0.0;
+        velPub_->publish(vel_msg);
 
-        //-------------------------------------------------------------------------------------------------------
-        //Compute velocities commands for the robot: differential drive control, for UAVs this is not necessary
-        //-------------------------------------------------------------------------------------------------------
-        auto vel_msg = this->Diff_drive_compute_vel(vel_x, vel_y, this->pose_theta(ID));
-        //-------------------------------------------------------------------------------------------------------
-
-        RCLCPP_INFO_STREAM(get_logger(), "sending cmd_vel to " << ID << ":: " << vel_msg.angular.z << ", "<<vel_msg.linear.x);
-
-        this->velPub_[0]->publish(vel_msg);
-        if (GUI) {this->voronoiPub->publish(this->polygonStamped_msg);}
-
-        if (robot_stopped == true)
-        {
-            time(&this->timer_final_count);
-            if (this->timer_final_count - this->timer_init_count >= shutdown_timer)
-            {
-                //shutdown node
-                std::cout<<"SHUTTING DOWN THE NODE"<<std::endl;
-                this->stop();   //stop the controller
-                rclcpp::shutdown();
-            }
-        } else {
-            time(&this->timer_init_count);
-        }
+        this->voronoiPub->publish(this->polygonStamped_msg);
 
         auto end = this->get_clock()->now().nanoseconds();
         std::cout<<"Computation time cost: -----------------: "<<end - start<<std::endl;
+    } else {
+        return;
     }
 }
 
