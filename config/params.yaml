@@ -1,0 +1,7 @@
+/**:
+  ros__parameters:
+    robot_range: 10.0
+    area_size_x: 20.0
+    area_size_y: 20.0
+    area_left: -10.0
+    area_bottom: -10.0
