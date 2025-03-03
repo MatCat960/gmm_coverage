@@ -46,7 +46,7 @@ def generate_launch_description():
         theta.append(th)
         # print(th)
 
-        
+
 
     for i in range(ROBOTS_NUM):
         spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
@@ -54,7 +54,6 @@ def generate_launch_description():
                                     '-x', str(float(x_pos[i])), '-y', str(float(y_pos[i])), '-z', str(0.1), '-Y', str(theta[i]),
                             ],
                             output='screen')
-
         launch_list.append(spawn_entity)
 
 
@@ -65,25 +64,19 @@ def generate_launch_description():
         yt = random.uniform(-0.0*AREA_W, 0.5*AREA_W)
         xtargets.append(xt)
         ytargets.append(yt)
-        target = Node(package='gazebo_ros', executable='spawn_entity.py',
+        launch_list.append(Node(package='gazebo_ros', executable='spawn_entity.py',
                             arguments=['-entity', 'target'+str(i), '-database', 'target', '-robot_namespace', 'target'+str(i),
                                     '-x', str(float(xt)), '-y', str(float(yt)), '-z', str(0.2),
                             ],
-                            output='screen')
-
-        launch_list.append(target)
-
-    for i in range(TARGETS_NUM):
-        target_pub = Node(
+                            output='screen'))
+        launch_list.append(Node(
             package='gmm_coverage',
-            node_executable='target_publisher_node',
+            executable='target_publisher_node',
             name='target_pub'+str(i),
             parameters=[{"XT": xtargets[i]},
                         {"YT": ytargets[i]},
                         {"ID": i}],
-            output='screen')
-    
-        launch_list.append(target_pub)
-        
+            output='screen'))
+
 
     return LaunchDescription(launch_list)
