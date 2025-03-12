@@ -16,6 +16,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # find dependencies
+find_package(arrc REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -57,10 +58,8 @@ set(dependencies
   "sfml-window"
   "sfml-system"
 )
-
-target_link_libraries(${PROJECT_NAME}_lib)
 ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
-
+target_link_libraries(${PROJECT_NAME}_lib arrc::arrc)
 # add_executable(hs_interface src/hs_interface.cpp )
 # target_link_libraries(hs_interface ${SFML_libraries})
 # ament_target_dependencies(hs_interface ${dependencies})
@@ -72,6 +71,7 @@ ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
 add_executable(distributed_gmm src/distributed_gmm.cpp )
 # target_link_libraries(distributed_gmm ${SFML_libraries})
 ament_target_dependencies(distributed_gmm ${dependencies})
+target_link_libraries(distributed_gmm arrc::arrc)
 
 # add_executable(gmm_visualizer src/gmm_visualizer.cpp )
 # target_link_libraries(gmm_visualizer ${SFML_libraries})
@@ -102,8 +102,8 @@ ament_target_dependencies(distributed_gmm ${dependencies})
 #  DESTINATION lib/${PROJECT_NAME}
 #  )
 
-  
-install(TARGETS  distributed_gmm    
+
+install(TARGETS  distributed_gmm
   DESTINATION lib/${PROJECT_NAME}
 )
 
