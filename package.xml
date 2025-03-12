@@ -16,7 +16,7 @@
   <depend>sensor_msgs</depend>
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
-  <depend>arrc</depend>
+  <depend>arrc-library</depend>
   <depend>arrc_interfaces</depend>
   <exec_depend>rclpy</exec_depend>
 
