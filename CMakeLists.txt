@@ -110,6 +110,10 @@ install(TARGETS  distributed_gmm
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
 )
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}
+)
+
 
 install(DIRECTORY include/gmm_coverage
   DESTINATION include

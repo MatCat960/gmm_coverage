@@ -1,7 +1,15 @@
 /**:
   ros__parameters:
     robot_range: 10.0
-    area_size_x: 20.0
-    area_size_y: 20.0
-    area_left: -10.0
-    area_bottom: -10.0
+    area_size_x: 100.0
+    area_size_y: 100.0
+    area_left: -50.0
+    area_bottom: -50.0
+    team_sizes: [3,3]
+    team_ids: [1, 2, 3, 4, 5, 6]
+    gaussians_x: [10.0,-10.0,0.0]
+    gaussians_y: [10.0,-10.0,0.0]
+    gaussians_xx: [10.0,10.0,10.0]
+    gaussians_yy: [10.0,10.0,10.0]
+    gaussians_xy: [0.0,0.0,0.0]
+    gaussians_yx: [0.0,0.0,0.0]

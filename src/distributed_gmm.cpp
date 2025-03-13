@@ -13,6 +13,7 @@
 #include <eigen3/Eigen/Dense>
 #include <functional>
 #include <limits>
+#include <math/linalg.h>
 #include <memory>
 #include <vector>
 // #include "Graphics.h"
@@ -92,8 +93,8 @@ namespace gmm_coverage
     std::string uav_name_;
     uint32_t uav_id_;
     std::vector<int> uav_team_;
-  std::string gps_origin_frame_;
-   // Compute team barycenters
+    std::string gps_origin_frame_;
+    // Compute team barycenters
     std::map<int, std::vector<arrc::Vec2>> team_positions;
     Params params;
     arrc::coverage::Box AreaBox;
@@ -108,73 +109,97 @@ namespace gmm_coverage
   void GMMController::declareAndInitParams()
   {
     uav_name_ = get_namespace();
-  uav_name_.erase(0, 1);
-  gps_origin_frame_ = uav_name_ + "/gps_origin";
-  RCLCPP_INFO(this->get_logger(), "UAV name: %s", uav_name_.c_str());
-  // Extract UAV ID from name (format: "Drone{id}")
-  try {
-    uav_id_ = std::stoul(uav_name_.substr(5)); // Skip "Drone" prefix and convert remaining digits
-  } catch (const std::exception& e) {
-    RCLCPP_ERROR(this->get_logger(), "Failed to extract UAV ID from name '%s': %s", uav_name_.c_str(), e.what());
-    uav_id_ = 0;
-  }
+    uav_name_.erase(0, 1);
+    gps_origin_frame_ = uav_name_ + "/gps_origin";
+    RCLCPP_INFO(this->get_logger(), "UAV name: %s", uav_name_.c_str());
+    // Extract UAV ID from name (format: "Drone{id}")
+    try {
+      uav_id_ = std::stoul(uav_name_.substr(5)); // Skip "Drone" prefix and convert remaining digits
+    } catch (const std::exception& e) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to extract UAV ID from name '%s': %s", uav_name_.c_str(), e.what());
+      uav_id_ = 0;
+    }
     this->declare_parameter<double>("robot_range", 5.0);
     this->declare_parameter<double>("area_width", 20);
     this->declare_parameter<double>("area_height", 20);
     this->declare_parameter<double>("area_left", -10);
     this->declare_parameter<double>("area_bottom", -10);
     this->declare_parameter<double>("lloyd_gain", 0.5);
-    declare_parameter<std::vector<int>>("team_sizes", { 1 });
-    declare_parameter<std::vector<int>>("team_ids", { 1 });
+    this->declare_parameter<std::vector<int>>("team_sizes", { 0 });
+    this->declare_parameter<std::vector<int>>("team_ids", { 0 });
+    this->declare_parameter<std::vector<double>>("gaussians_x", { 0.0 });
+    this->declare_parameter<std::vector<double>>("gaussians_y", { 0.0 });
+    this->declare_parameter<std::vector<double>>("gaussians_xx", { 0.0 });
+    this->declare_parameter<std::vector<double>>("gaussians_yy", { 0.0 });
+    this->declare_parameter<std::vector<double>>("gaussians_xy", { 0.0 });
+    this->declare_parameter<std::vector<double>>("gaussians_yx", { 0.0 });
+
     this->get_parameter("robot_range", params.robot_range);
+    const auto half_range = params.robot_range / 2.f;
+
+    const Vec2f half_range_vec(half_range);
+    RangeBox= arrc::coverage::Box(-half_range_vec, half_range_vec);
     this->get_parameter("area_width", params.area_width);
     this->get_parameter("area_height", params.area_height);
     this->get_parameter("area_left", params.area_left);
     this->get_parameter("area_bottom", params.area_bottom);
+    AreaBox = arrc::coverage::Box(Vec2f(params.area_left, params.area_bottom), Vec2f(params.area_left + params.area_width, params.area_bottom + params.area_height));
     this->get_parameter("lloyd_gain", params.lloyd_gain);
     std::vector<int64_t> team_sizes = get_parameter("team_sizes").as_integer_array();
-  std::vector<int64_t> team_ids = get_parameter("team_ids").as_integer_array();
+    std::vector<int64_t> team_ids = get_parameter("team_ids").as_integer_array();
 
-  params.teams.clear();
-  params.teams.reserve(team_sizes.size());
-  size_t id_idx = 0;
-  for (size_t i = 0; i < team_sizes.size(); i++) {
-    std::vector<int> team;
-    for (size_t j = 0; j < static_cast<size_t>(team_sizes[i]); j++) {
-      if (id_idx < team_ids.size()) {
-        team.push_back(team_ids[id_idx++]);
+    params.teams.clear();
+    params.teams.reserve(team_sizes.size());
+    size_t id_idx = 0;
+    for (size_t i = 0; i < team_sizes.size(); i++) {
+      std::vector<int> team;
+      for (size_t j = 0; j < static_cast<size_t>(team_sizes[i]); j++) {
+        if (id_idx < team_ids.size()) {
+          team.push_back(team_ids[id_idx++]);
+        }
+      }
+      params.teams.push_back(team);
+    }
+
+    // Find my team
+    uav_team_.clear();
+    for (const auto& team : params.teams) {
+      if (std::find(team.begin(), team.end(), uav_id_) != team.end()) {
+        uav_team_ = team;
+        break;
       }
     }
-    params.teams.push_back(team);
-  }
 
-  // Find my team
-  uav_team_.clear();
-  for (const auto& team : params.teams) {
-    if (std::find(team.begin(), team.end(), uav_id_) != team.end()) {
-      uav_team_ = team;
-      break;
+    if (uav_team_.empty()) {
+      RCLCPP_WARN(this->get_logger(), "UAV ID %d not found in any team!", uav_id_);
+    } else {
+      RCLCPP_INFO_STREAM(this->get_logger(), fmt::format("UAV team: {}", fmt::join(uav_team_, ",")));
     }
-  }
-  
-  if (uav_team_.empty()) {
-    RCLCPP_WARN(this->get_logger(), "UAV ID %d not found in any team!", uav_id_);
-  }else{
-    RCLCPP_INFO_STREAM(this->get_logger(), fmt::format("UAV team: {}", fmt::join(uav_team_, ",")));
-  }
   }
   void GMMController::initializeGMM()
   {
-    // GMM params
-    Gaussian g1(1.0, { -2.0, -1.0 }, { { 0.5, 0.0 }, { 0.0, 0.5 } });
-    Gaussian g2(1.0, { 2.0, 1.0 }, { { 0.5, 0.0 }, { 0.0, 0.5 } });
-    gaussians.push_back(std::move(g1));
-    gaussians.push_back(std::move(g2));
+    auto gaussians_x = this->get_parameter("gaussians_x").as_double_array();
+    auto gaussians_y = this->get_parameter("gaussians_y").as_double_array();
+    auto gaussians_xx = this->get_parameter("gaussians_xx").as_double_array();
+    auto gaussians_yy = this->get_parameter("gaussians_yy").as_double_array();
+    auto gaussians_xy = this->get_parameter("gaussians_xy").as_double_array();
+    auto gaussians_yx = this->get_parameter("gaussians_yx").as_double_array();
+
+    auto min_common =
+        std::min(gaussians_x.size(),
+                 std::min(gaussians_y.size(), std::min(gaussians_xx.size(),
+                                                       std::min(gaussians_yy.size(), std::min(gaussians_xy.size(), gaussians_yx.size())))));
+    for (size_t i = 0; i < min_common; ++i) {
+      Gaussian g((float)1.f / min_common, { (float)gaussians_x[i], (float)gaussians_y[i] },
+                 { { (float)gaussians_xx[i], (float)gaussians_xy[i] }, { (float)gaussians_yx[i], (float)gaussians_yy[i] } });
+      RCLCPP_INFO(this->get_logger(), "Gaussian %ld: mean = (%f, %f), cov = (%f, %f), (%f, %f)", i, g.mean[0], g.mean[1], g.variance[0][0], g.variance[0][1], g.variance[1][0], g.variance[1][1]);
+      gaussians.push_back(std::move(g));
+    }
   }
   void GMMController::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
   {
     odom_ = *msg;
-    team_positions[uav_id_].push_back({(float)odom_.pose.pose.position.x, (float)odom_.pose.pose.position.y});
+    team_positions[uav_id_].push_back({ (float)odom_.pose.pose.position.x, (float)odom_.pose.pose.position.y });
   }
   void GMMController::neighborsCallback(const arrc_interfaces::msg::Neighbors::SharedPtr msg)
   {
@@ -189,7 +214,7 @@ namespace gmm_coverage
                      size_t start = frame_id.find("Drone") + 5; // Skip "Drone"
                      size_t end = frame_id.find("/", start);
                      int neighbor_id = std::stoi(frame_id.substr(start, end - start));
-                     arrc::Vec2 neighbor_pos{(float)point.point.x, (float)point.point.y};
+                     arrc::Vec2 neighbor_pos{ (float)point.point.x, (float)point.point.y };
                      // Add neighbor position to its team's positions
                      team_positions[neighbor_id].push_back(neighbor_pos);
                      return point;
@@ -205,27 +230,27 @@ namespace gmm_coverage
     // Compute barycenter for each team
     team_baricenters.clear();
     for (const auto& team : params.teams) {
-        arrc::Vec2 team_baricenter{0.0f, 0.0f};
-        int team_size = 0;
-        
-        // Sum up positions for all team members
-        for (int id : team) {
-            for (const auto& pos : team_positions[id]) {
-                team_baricenter.x += pos.x;
-                team_baricenter.y += pos.y;
-                team_size++;
-            }
-            if (id == (int)uav_id_) {
-              my_team_id = team_baricenter.size();
-            }
+      arrc::Vec2 team_baricenter{ 0.0f, 0.0f };
+      int team_size = 0;
+
+      // Sum up positions for all team members
+      for (int id : team) {
+        for (const auto& pos : team_positions[id]) {
+          team_baricenter.x += pos.x;
+          team_baricenter.y += pos.y;
+          team_size++;
         }
-        
-        // Compute average if team has members
-        if (team_size > 0) {
-            team_baricenter.x /= team_size;
-            team_baricenter.y /= team_size;
-            team_baricenters.push_back(team_baricenter);
+        if (id == (int)uav_id_) {
+          my_team_id = team_baricenter.size();
         }
+      }
+
+      // Compute average if team has members
+      if (team_size > 0) {
+        team_baricenter.x /= team_size;
+        team_baricenter.y /= team_size;
+        team_baricenters.push_back(team_baricenter);
+      }
     }
 
     // Variables
@@ -235,6 +260,7 @@ namespace gmm_coverage
     seeds.reserve(team_baricenters.size());
     seeds.push_back(team_baricenters[my_team_id]);
     for (size_t i = 0; i < team_baricenters.size(); i++) {
+        RCLCPP_INFO(this->get_logger(), "Team baricenter %zu: %f, %f", i, team_baricenters[i].x, team_baricenters[i].y);
       if (i != my_team_id) {
         seeds.push_back(team_baricenters[i]);
       }
@@ -259,6 +285,7 @@ namespace gmm_coverage
         pt.x = v->x;
         pt.y = v->y;
         this->polygon_msg.points.push_back(pt);
+        RCLCPP_INFO(this->get_logger(), "Vertex: (%f, %f)", pt.x, pt.y);
       }
 
       this->polygonStamped_msg.header.stamp = this->get_clock()->now();
