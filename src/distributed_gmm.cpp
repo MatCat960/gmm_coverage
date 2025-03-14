@@ -13,6 +13,8 @@
 #include <eigen3/Eigen/Dense>
 #include <functional>
 #include <limits>
+#include <map>
+#include <math/eigen_converters.h>
 #include <math/linalg.h>
 #include <memory>
 #include <vector>
@@ -93,9 +95,9 @@ namespace gmm_coverage
     std::string uav_name_;
     uint32_t uav_id_;
     std::vector<int> uav_team_;
+    size_t uav_team_id_;
     std::string gps_origin_frame_;
-    // Compute team barycenters
-    std::map<int, std::vector<arrc::Vec2>> team_positions;
+    std::map<int, std::map<int, arrc::Vec2>> team_positions;
     Params params;
     arrc::coverage::Box AreaBox;
     arrc::coverage::Box RangeBox;
@@ -138,12 +140,13 @@ namespace gmm_coverage
     const auto half_range = params.robot_range / 2.f;
 
     const Vec2f half_range_vec(half_range);
-    RangeBox= arrc::coverage::Box(-half_range_vec, half_range_vec);
+    RangeBox = arrc::coverage::Box(-half_range_vec, half_range_vec);
     this->get_parameter("area_width", params.area_width);
     this->get_parameter("area_height", params.area_height);
     this->get_parameter("area_left", params.area_left);
     this->get_parameter("area_bottom", params.area_bottom);
-    AreaBox = arrc::coverage::Box(Vec2f(params.area_left, params.area_bottom), Vec2f(params.area_left + params.area_width, params.area_bottom + params.area_height));
+    AreaBox = arrc::coverage::Box(Vec2f(params.area_left, params.area_bottom),
+                                  Vec2f(params.area_left + params.area_width, params.area_bottom + params.area_height));
     this->get_parameter("lloyd_gain", params.lloyd_gain);
     std::vector<int64_t> team_sizes = get_parameter("team_sizes").as_integer_array();
     std::vector<int64_t> team_ids = get_parameter("team_ids").as_integer_array();
@@ -163,11 +166,14 @@ namespace gmm_coverage
 
     // Find my team
     uav_team_.clear();
+    size_t counter = 0;
     for (const auto& team : params.teams) {
       if (std::find(team.begin(), team.end(), uav_id_) != team.end()) {
         uav_team_ = team;
+        uav_team_id_ = counter;
         break;
       }
+      counter++;
     }
 
     if (uav_team_.empty()) {
@@ -192,14 +198,15 @@ namespace gmm_coverage
     for (size_t i = 0; i < min_common; ++i) {
       Gaussian g((float)1.f / min_common, { (float)gaussians_x[i], (float)gaussians_y[i] },
                  { { (float)gaussians_xx[i], (float)gaussians_xy[i] }, { (float)gaussians_yx[i], (float)gaussians_yy[i] } });
-      RCLCPP_INFO(this->get_logger(), "Gaussian %ld: mean = (%f, %f), cov = (%f, %f), (%f, %f)", i, g.mean[0], g.mean[1], g.variance[0][0], g.variance[0][1], g.variance[1][0], g.variance[1][1]);
+      RCLCPP_INFO(this->get_logger(), "Gaussian %ld: mean = (%f, %f), cov = (%f, %f), (%f, %f)", i, g.mean[0], g.mean[1], g.variance[0][0],
+                  g.variance[0][1], g.variance[1][0], g.variance[1][1]);
       gaussians.push_back(std::move(g));
     }
   }
   void GMMController::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
   {
     odom_ = *msg;
-    team_positions[uav_id_].push_back({ (float)odom_.pose.pose.position.x, (float)odom_.pose.pose.position.y });
+    team_positions[uav_team_id_][uav_id_] = { (float)odom_.pose.pose.position.x, (float)odom_.pose.pose.position.y };
   }
   void GMMController::neighborsCallback(const arrc_interfaces::msg::Neighbors::SharedPtr msg)
   {
@@ -214,9 +221,16 @@ namespace gmm_coverage
                      size_t start = frame_id.find("Drone") + 5; // Skip "Drone"
                      size_t end = frame_id.find("/", start);
                      int neighbor_id = std::stoi(frame_id.substr(start, end - start));
+                     int neighbor_team_id = 0;
+                     for (const auto& team : params.teams) {
+                       if (std::find(team.begin(), team.end(), neighbor_id) != team.end()) {
+                         break;
+                       }
+                       neighbor_team_id++;
+                     }
                      arrc::Vec2 neighbor_pos{ (float)point.point.x, (float)point.point.y };
                      // Add neighbor position to its team's positions
-                     team_positions[neighbor_id].push_back(neighbor_pos);
+                     team_positions[neighbor_team_id][neighbor_id] = neighbor_pos;
                      return point;
                    });
   }
@@ -224,32 +238,20 @@ namespace gmm_coverage
   {
     auto start = this->get_clock()->now().nanoseconds();
 
-    std::vector<arrc::Vec2> team_baricenters;
-    team_baricenters.reserve(params.teams.size());
-    size_t my_team_id;
-    // Compute barycenter for each team
-    team_baricenters.clear();
-    for (const auto& team : params.teams) {
+    std::map<int, arrc::Vec2> team_baricenters;
+    for (const auto& [team_id, positions] : team_positions) {
+      size_t team_size = 0;
       arrc::Vec2 team_baricenter{ 0.0f, 0.0f };
-      int team_size = 0;
-
-      // Sum up positions for all team members
-      for (int id : team) {
-        for (const auto& pos : team_positions[id]) {
-          team_baricenter.x += pos.x;
-          team_baricenter.y += pos.y;
-          team_size++;
-        }
-        if (id == (int)uav_id_) {
-          my_team_id = team_baricenter.size();
-        }
+      for (const auto& [id, position] : positions) {
+        team_baricenter.x += position.x;
+        team_baricenter.y += position.y;
+        team_size++;
       }
-
       // Compute average if team has members
       if (team_size > 0) {
         team_baricenter.x /= team_size;
         team_baricenter.y /= team_size;
-        team_baricenters.push_back(team_baricenter);
+        team_baricenters[team_id] = team_baricenter;
       }
     }
 
@@ -257,15 +259,12 @@ namespace gmm_coverage
     Eigen::Vector2d vel_cmd;
     // ------------------------------------------------------ Environment definition -----------------------------------------------------
     seeds.clear();
-    seeds.reserve(team_baricenters.size());
-    seeds.push_back(team_baricenters[my_team_id]);
-    for (size_t i = 0; i < team_baricenters.size(); i++) {
-        RCLCPP_INFO(this->get_logger(), "Team baricenter %zu: %f, %f", i, team_baricenters[i].x, team_baricenters[i].y);
-      if (i != my_team_id) {
-        seeds.push_back(team_baricenters[i]);
+    seeds.push_back(team_baricenters[uav_team_id_]);
+    for (const auto& [id, barycenter] : team_baricenters) {
+      if (static_cast<size_t>(id) != uav_team_id_) {
+        seeds.push_back(team_baricenters[id]);
       }
     }
-
     if (odom_.header.stamp.sec > 0.0) { // be sure we have a valid odometry
 
       //-----------------Voronoi--------------------
@@ -289,12 +288,12 @@ namespace gmm_coverage
       }
 
       this->polygonStamped_msg.header.stamp = this->get_clock()->now();
-      this->polygonStamped_msg.header.frame_id = gps_origin_frame_;
+      this->polygonStamped_msg.header.frame_id = "world";
       this->polygonStamped_msg.polygon = this->polygon_msg;
 
       // compute centroid -- GAUSSIAN DISTRIBUTION
       auto c = arrc::coverage::computePolygonCentroid(diagram, this->gaussians);
-      Eigen::Vector2d centroid(c[0], c[1]);
+      Eigen::Vector2d centroid = arrc::math::toEigen(c + team_baricenters[uav_team_id_]).cast<double>();
       std::cout << "centroid: " << centroid.transpose() << std::endl;
       double dist = centroid.norm();
       std::cout << "dist to centroid: " << dist << std::endl;
