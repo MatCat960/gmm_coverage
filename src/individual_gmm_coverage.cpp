@@ -131,7 +131,7 @@ namespace gmm_coverage
     this->declare_parameter<std::vector<double>>("gaussians_yy", { 0.0 });
     this->declare_parameter<std::vector<double>>("gaussians_xy", { 0.0 });
     this->declare_parameter<std::vector<double>>("gaussians_yx", { 0.0 });
-
+    this->declare_parameter<std::vector<double>>("mix", { 0.0 });
     this->get_parameter("robot_range", params.robot_range);
     const auto half_range = params.robot_range / 2.f;
 
@@ -153,15 +153,14 @@ namespace gmm_coverage
     auto gaussians_yy = this->get_parameter("gaussians_yy").as_double_array();
     auto gaussians_xy = this->get_parameter("gaussians_xy").as_double_array();
     auto gaussians_yx = this->get_parameter("gaussians_yx").as_double_array();
-
-    auto min_common =
-        std::min(gaussians_x.size(),
-                 std::min(gaussians_y.size(), std::min(gaussians_xx.size(),
-                                                       std::min(gaussians_yy.size(), std::min(gaussians_xy.size(), gaussians_yx.size())))));
+    auto mix = this->get_parameter("mix").as_double_array();
+    auto min_common =std::min(mix.size(), std::min(gaussians_x.size(),
+                                                   std::min(gaussians_y.size(), std::min(gaussians_xx.size(),
+                                                                                         std::min(gaussians_yy.size(), std::min(gaussians_xy.size(), gaussians_yx.size()))))));
     for (size_t i = 0; i < min_common; ++i) {
-      Gaussian g((float)1.f / min_common, { (float)gaussians_x[i], (float)gaussians_y[i] },
+      Gaussian g((float)mix[i], { (float)gaussians_x[i], (float)gaussians_y[i] },
                  { { (float)gaussians_xx[i], (float)gaussians_xy[i] }, { (float)gaussians_yx[i], (float)gaussians_yy[i] } });
-      RCLCPP_INFO(this->get_logger(), "Gaussian %ld: mean = (%f, %f), cov = (%f, %f), (%f, %f)", i, g.mean[0], g.mean[1], g.variance[0][0],
+      RCLCPP_INFO(this->get_logger(), "Gaussian %ld: weight = %f, mean = (%f, %f), cov = (%f, %f), (%f, %f)", i, g.weight, g.mean[0], g.mean[1], g.variance[0][0],
                   g.variance[0][1], g.variance[1][0], g.variance[1][1]);
       gaussians.push_back(std::move(g));
     }
@@ -203,9 +202,9 @@ namespace gmm_coverage
     // ------------------------------------------------------ Environment definition -----------------------------------------------------
     seeds.clear();
     seeds.reserve(neighbors_.size() + 1);
-    seeds.push_back({ odom_.pose.pose.position.x, odom_.pose.pose.position.y });
+    seeds.push_back({ static_cast<float>(odom_.pose.pose.position.x), static_cast<float>(odom_.pose.pose.position.y) });
     for (auto neighbor : neighbors_) {
-        seeds.push_back({ neighbor.point.x, neighbor.point.y });
+        seeds.push_back({ static_cast<float>(neighbor.point.x), static_cast<float>(neighbor.point.y) });
     }
 
     if (odom_.header.stamp.sec > 0.0) { // be sure we have a valid odometry
@@ -262,4 +261,3 @@ int main(int argc, char** argv)
   rclcpp::shutdown();
   return 0;
 }
-
