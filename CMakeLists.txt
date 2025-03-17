@@ -23,6 +23,7 @@ find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 # find_package(turtlebot3_msgs REQUIRED)
@@ -51,6 +52,7 @@ set(dependencies
   "sensor_msgs"
   "visualization_msgs"
   "arrc_interfaces"
+  "std_srvs"
 )
 
   set(SFML_libraries

@@ -17,6 +17,7 @@
 #include <math/eigen_converters.h>
 #include <math/linalg.h>
 #include <memory>
+#include <rclcpp/service.hpp>
 #include <vector>
 // #include "Graphics.h"
 // ROS includes
@@ -32,6 +33,7 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <std_srvs/srv/set_bool.hpp>
 
 using namespace std::chrono_literals;
 namespace gmm_coverage
@@ -66,6 +68,14 @@ namespace gmm_coverage
           "neighbors_odometry", 1, [this](arrc_interfaces::msg::Neighbors::SharedPtr msg) { this->neighborsCallback(msg); });
       target_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("target", 1);
       voronoiPub = this->create_publisher<geometry_msgs::msg::PolygonStamped>("voronoi_diagram", 1);
+      start_test_srv_ = this->create_service<std_srvs::srv::SetBool>(
+          "start_test",
+          [this](const std::shared_ptr<std_srvs::srv::SetBool::Request> request,
+                 std::shared_ptr<std_srvs::srv::SetBool::Response> response) {
+            start_test_ = request->data;
+            response->success = true;
+            response->message = "Start test set to: " + std::to_string(start_test_);
+          });
 
       timer_ = this->create_wall_timer(200ms, std::bind(&GMMController::loop, this));
     }
@@ -84,6 +94,7 @@ namespace gmm_coverage
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
     rclcpp::Subscription<arrc_interfaces::msg::Neighbors>::SharedPtr neighbors_sub_;
     rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr voronoiPub;
+    rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr start_test_srv_;
     rclcpp::TimerBase::SharedPtr timer_;
     geometry_msgs::msg::Polygon polygon_msg;
     geometry_msgs::msg::PolygonStamped polygonStamped_msg;
@@ -91,6 +102,7 @@ namespace gmm_coverage
     // Odometries
     nav_msgs::msg::Odometry odom_;
     std::vector<geometry_msgs::msg::PointStamped> neighbors_;
+    bool start_test_ = false;
     //---------------------------- Environment definition --------------------------------
     std::string uav_name_;
     uint32_t uav_id_;
@@ -307,8 +319,11 @@ namespace gmm_coverage
       target_msg.pose.pose.orientation.x = 0.0;
       target_msg.pose.pose.orientation.y = 0.0;
       target_msg.pose.pose.orientation.z = 0.0;
-      target_pub_->publish(target_msg);
-      this->voronoiPub->publish(this->polygonStamped_msg);
+      if(start_test_)
+      {
+        target_pub_->publish(target_msg);
+        this->voronoiPub->publish(this->polygonStamped_msg);
+      }
       auto end = this->get_clock()->now().nanoseconds();
       std::cout << "Computation time cost: -----------------: " << end - start << std::endl;
     } else {
