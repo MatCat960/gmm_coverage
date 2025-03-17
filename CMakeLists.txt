@@ -75,6 +75,10 @@ add_executable(distributed_gmm src/distributed_gmm.cpp )
 ament_target_dependencies(distributed_gmm ${dependencies})
 target_link_libraries(distributed_gmm arrc::arrc)
 
+add_executable(individual_gmm_coverage src/individual_gmm_coverage.cpp )
+ament_target_dependencies(individual_gmm_coverage ${dependencies})
+target_link_libraries(individual_gmm_coverage arrc::arrc)
+
 # add_executable(gmm_visualizer src/gmm_visualizer.cpp )
 # target_link_libraries(gmm_visualizer ${SFML_libraries})
 # ament_target_dependencies(gmm_visualizer ${dependencies})
@@ -105,7 +109,7 @@ target_link_libraries(distributed_gmm arrc::arrc)
 #  )
 
 
-install(TARGETS  distributed_gmm
+install(TARGETS  distributed_gmm individual_gmm_coverage
   DESTINATION lib/${PROJECT_NAME}
 )
 

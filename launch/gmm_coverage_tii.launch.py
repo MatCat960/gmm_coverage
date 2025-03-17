@@ -17,9 +17,9 @@ def generate_launch_description():
     param = os.path.join(pkg_path, 'config','params.yaml')
     node = Node(
         package='gmm_coverage',
-        executable='distributed_gmm',
+        executable='individual_gmm_coverage',
         namespace=ns,
-        name='distributed_gmm',
+        name='individual_gmm_coverage',
         parameters=[param],
         output='screen'
     )
