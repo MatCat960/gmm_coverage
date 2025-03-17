@@ -14,7 +14,7 @@ config_dir = os.path.join(get_package_share_directory('gmm_coverage'), 'config')
 config_file = os.path.join(config_dir, 'polygon_gmm.yaml')
 with open(config_file, "r") as f:
     data = yaml.safe_load(f)
-    
+
 AREA_X = data["/**"]["ros__parameters"]["area_size_x"]
 AREA_Y = data["/**"]["ros__parameters"]["area_size_y"]
 AREA_LEFT = data["/**"]["ros__parameters"]["area_left"]
@@ -95,7 +95,7 @@ def main():
 
     GMModel = GaussianMixture(n_components=COMPONENTS_NUM, covariance_type='full', max_iter=1000)
     GMModel.fit(np.column_stack((xp, yp)))
-    
+
     # calculate BIC
     # bic = GMModel.bic(np.column_stack((xp, yp)))
 
@@ -121,7 +121,7 @@ def main():
     Z = gmm_pdf(Xg, Yg, means, covariances, mix)
     Z = Z.reshape(100, 100)
 
-
+    config_file = 'polygon_gmm.yaml'
     # write to file
     covs = covariances.reshape(-1, 4)
     data["/**"]["ros__parameters"]["gaussians_x"] = means[:, 0].tolist()
@@ -141,9 +141,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-    
-
-
