@@ -14,7 +14,7 @@ def generate_launch_description():
     uav_name = EnvironmentVariable('UAV_NAME')
 
     ns = LaunchConfiguration('uav_name',default=uav_name)
-    config_dir = os.path.join(get_package_share_directory('formation_control'), 'config')
+    config_dir = os.path.join(get_package_share_directory('gmm_coverage'), 'config')
     config_arg = DeclareLaunchArgument(
         'config',
         description='Name of the parameter file (with extension)'
@@ -33,4 +33,4 @@ def generate_launch_description():
     )
 
 
-    return LaunchDescription([node])
+    return LaunchDescription([config_arg,node])
