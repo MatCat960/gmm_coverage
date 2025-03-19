@@ -125,6 +125,7 @@ namespace gmm_coverage
     this->declare_parameter<double>("area_left", -10);
     this->declare_parameter<double>("area_bottom", -10);
     this->declare_parameter<double>("lloyd_gain", 0.5);
+    this->declare_parameter<double>("convergence_tolerance", 0.5);
     this->declare_parameter<std::vector<double>>("gaussians_x", { 0.0 });
     this->declare_parameter<std::vector<double>>("gaussians_y", { 0.0 });
     this->declare_parameter<std::vector<double>>("gaussians_xx", { 0.0 });
@@ -132,18 +133,9 @@ namespace gmm_coverage
     this->declare_parameter<std::vector<double>>("gaussians_xy", { 0.0 });
     this->declare_parameter<std::vector<double>>("gaussians_yx", { 0.0 });
     this->declare_parameter<std::vector<double>>("mix", { 0.0 });
-    this->get_parameter("robot_range", params.robot_range);
-    const auto half_range = params.robot_range / 2.f;
+    
 
-    const Vec2f half_range_vec(half_range);
-    RangeBox = arrc::coverage::Box(-half_range_vec, half_range_vec);
-    this->get_parameter("area_width", params.area_width);
-    this->get_parameter("area_height", params.area_height);
-    this->get_parameter("area_left", params.area_left);
-    this->get_parameter("area_bottom", params.area_bottom);
-    AreaBox = arrc::coverage::Box(Vec2f(params.area_left, params.area_bottom),
-                                  Vec2f(params.area_left + params.area_width, params.area_bottom + params.area_height));
-    this->get_parameter("lloyd_gain", params.lloyd_gain);
+    
   }
   void GMMController::initializeGMM()
   {
@@ -196,6 +188,19 @@ namespace gmm_coverage
   void GMMController::loop()
   {
     auto start = this->get_clock()->now().nanoseconds();
+
+    this->get_parameter("area_width", params.area_width);
+    this->get_parameter("area_height", params.area_height);
+    this->get_parameter("area_left", params.area_left);
+    this->get_parameter("area_bottom", params.area_bottom);
+    AreaBox = arrc::coverage::Box(Vec2f(params.area_left, params.area_bottom),
+                                  Vec2f(params.area_left + params.area_width, params.area_bottom + params.area_height));
+    this->get_parameter("lloyd_gain", params.lloyd_gain);
+    this->get_parameter("convergence_tolerance", params.convergence_tolerance);
+    this->get_parameter("robot_range", params.robot_range);
+    const auto half_range = params.robot_range / 2.f;
+    const Vec2f half_range_vec(half_range);
+    RangeBox = arrc::coverage::Box(-half_range_vec, half_range_vec);
 
     // Variables
     Eigen::Vector2d vel_cmd;
