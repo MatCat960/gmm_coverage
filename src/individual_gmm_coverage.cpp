@@ -133,9 +133,6 @@ namespace gmm_coverage
     this->declare_parameter<std::vector<double>>("gaussians_xy", { 0.0 });
     this->declare_parameter<std::vector<double>>("gaussians_yx", { 0.0 });
     this->declare_parameter<std::vector<double>>("mix", { 0.0 });
-    
-
-    
   }
   void GMMController::initializeGMM()
   {
@@ -217,7 +214,6 @@ namespace gmm_coverage
       //-----------------Voronoi--------------------
       // Rielaborazione vettore "points" globale in coordinate locali
       auto local_seeds_i = arrc::coverage::reworkPointsVector(seeds, seeds.at(0));
-
       // std::cout << "Punto medio gaussiana 1: " << this->gmm_msg.gaussians[0].mean_point.x << ", " <<
       // this->gmm_msg.gaussians[0].mean_point.y << std::endl;
       // Filtraggio siti esterni alla box (simula azione del sensore)
